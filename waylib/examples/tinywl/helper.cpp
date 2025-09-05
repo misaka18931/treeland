@@ -13,6 +13,8 @@
 #include <WServer>
 #include <WOutput>
 #include <WSurfaceItem>
+#include <QtCore/qdebug.h>
+#include <QtCore/qlogging.h>
 #include <qqmlengine.h>
 #include <wxdgpopupsurface.h>
 #include <wxdgtoplevelsurface.h>
@@ -41,6 +43,8 @@
 #include <wlayersurface.h>
 #include <wxdgdecorationmanager.h>
 #include <wextforeigntoplevellistv1.h>
+
+#include <wsessionlockmanager.h>
 
 #include <qwbackend.h>
 #include <qwdisplay.h>
@@ -89,6 +93,7 @@ Helper::Helper(QObject *parent)
     , m_topContainer(new LayerSurfaceContainer(m_surfaceContainer))
     , m_overlayContainer(new LayerSurfaceContainer(m_surfaceContainer))
     , m_popupContainer(new SurfaceContainer(m_surfaceContainer))
+    , m_lockContainer(new SurfaceContainer(m_surfaceContainer))
 {
     setCurrentUserId(getuid());
 
@@ -106,6 +111,7 @@ Helper::Helper(QObject *parent)
     m_topContainer->setZ(RootSurfaceContainer::TopZOrder);
     m_overlayContainer->setZ(RootSurfaceContainer::OverlayZOrder);
     m_popupContainer->setZ(RootSurfaceContainer::PopupZOrder);
+    m_lockContainer->setZ(RootSurfaceContainer::LockZOrder);
 }
 
 Helper::~Helper()
@@ -267,6 +273,43 @@ void Helper::init()
         m_surfaceContainer->destroyForSurface(surface->surface());
     });
 
+    auto *sessionLockManager = m_server->attach<WSessionLockManager>();
+    m_lockContainer->setVisible(false);
+    sessionLockManager->safeConnect(&WSessionLockManager::lockCreated, this, [this, sessionLockManager](WSessionLock *lock) {
+        if (m_sessionLock) {
+            qWarning() << "Only one session lock is allowed!";
+            lock->finish();
+            emit sessionLockManager->lockDestroyed(lock);
+            lock->safeDeleteLater();
+            return;
+        }
+        m_sessionLock = lock;
+        m_sessionLock->safeConnect(&WSessionLock::surfaceCreated, this, [this](WSessionLockSurface *surface) {
+            surface->configureSize(surface->output()->size());
+            auto wrapper = new SurfaceWrapper(qmlEngine(), surface, SurfaceWrapper::Type::SessionLock);
+            wrapper->setNoDecoration(true);
+            m_lockContainer->addSurface(wrapper);
+        });
+        m_lockContainer->setVisible(true);
+        lock->lock();
+        m_sessionLock->safeConnect(&WSessionLock::surfaceRemoved, this, [this](WSessionLockSurface *surface) {
+            m_surfaceContainer->destroyForSurface(surface->surface());
+        });
+        m_sessionLock->safeConnect(&WSessionLock::unlocked, this, [this] {
+            m_lockContainer->setVisible(false);
+            m_sessionLock = nullptr;
+        });
+    });
+    sessionLockManager->safeConnect(&WSessionLockManager::lockDestroyed, this, [this](WSessionLock *lock) {
+        qDebug() << "Session Lock Destroyed with locked = " << lock->locked() << '\n';
+        if (lock->locked()) {
+            qDebug() << "Lock Abandoned!!!\n";
+            qDebug() << "    We unlock the session for now.\n";
+            qDebug() << "    Note this is UNACCEPTABLE in real compositors.\n";
+            m_lockContainer->setVisible(false);
+            m_sessionLock = nullptr;
+        }
+    });
     m_server->start();
 
     m_renderer = WRenderHelper::createRenderer(m_backend->handle());
