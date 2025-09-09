@@ -142,5 +142,3 @@ void WSessionLock::finish()
 }
 
 WAYLIB_SERVER_END_NAMESPACE
-
-// TODO: handle lock destruction

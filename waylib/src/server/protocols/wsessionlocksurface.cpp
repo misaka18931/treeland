@@ -7,6 +7,7 @@
 #include "wtoplevelsurface.h"
 #include <qwcompositor.h>
 #include <qwsessionlockv1.h>
+#include <limits>
 
 WAYLIB_SERVER_BEGIN_NAMESPACE
 
@@ -132,8 +133,7 @@ WOutput *WSessionLockSurface::output() const
 
 int WSessionLockSurface::keyboardFocusPriority() const
 {
-    // Session lock surfaces typically have the highest priority for keyboard focus
-    return 100; // Arbitrary high value
+    return std::numeric_limits<int>::max();
 }
 
 uint32_t WSessionLockSurface::configureSize(const QSize &newSize)
@@ -144,22 +144,18 @@ uint32_t WSessionLockSurface::configureSize(const QSize &newSize)
 
 void WSessionLockSurface::resize(const QSize &size)
 {
-
+    configureSize(size);
 }
 
-// FIXME: rework this
 bool WSessionLockSurface::checkNewSize(const QSize &size, QSize *clippedSize)
 {
     return false;
 }
 
-// FIXME: rework this
 QRect WSessionLockSurface::getContentGeometry() const
 {
     W_DC(WSessionLockSurface);
-    // FIXME: implement properly
-    return QRect();
-    // return QRect(0, 0, d->nativeHandle()->width, d->nativeHandle()->height);
+    return QRect(0, 0, d->nativeHandle()->current.width, d->nativeHandle()->current.height);
 }
 
 WAYLIB_SERVER_END_NAMESPACE
