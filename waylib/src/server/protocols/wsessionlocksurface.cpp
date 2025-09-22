@@ -20,7 +20,7 @@ public:
 
     WWRAP_HANDLE_FUNCTIONS(qw_session_lock_surface_v1, wlr_session_lock_surface_v1)
 
-    wl_client *waylandClient() const {
+    wl_client *waylandClient() const override {
         return nativeHandle()->resource->client;
     }
 
@@ -28,7 +28,7 @@ public:
     // end slot function
 
     void init();
-    void instantRelease();
+    void instantRelease() override;
 
     W_DECLARE_PUBLIC(WSessionLockSurface)
 

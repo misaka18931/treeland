@@ -62,7 +62,7 @@ void WSessionLockPrivate::onNewSurface(qw_session_lock_surface_v1 *surface)
     });
 
     surfaceList.append(lockSurface);
-    emit q->surfaceAdded(lockSurface);
+    Q_EMIT q->surfaceAdded(lockSurface);
 }
 
 void WSessionLockPrivate::onSurfaceDestroy(qw_session_lock_surface_v1 *surface)
@@ -75,7 +75,7 @@ void WSessionLockPrivate::onSurfaceDestroy(qw_session_lock_surface_v1 *surface)
         // surface may be removed by session lock
         return;
     }
-    emit q->surfaceRemoved(lockSurface);
+    Q_EMIT q->surfaceRemoved(lockSurface);
     lockSurface->safeDeleteLater();
 }
 
@@ -91,7 +91,7 @@ void WSessionLockPrivate::lock()
     Q_ASSERT(m_status == WSessionLock::LockState::Created);
     handle()->send_locked();
     m_status = WSessionLock::LockState::Locked;
-    emit q->locked();
+    Q_EMIT q->locked();
 }
 
 void WSessionLockPrivate::finish()
@@ -100,7 +100,7 @@ void WSessionLockPrivate::finish()
     Q_ASSERT(m_status == WSessionLock::LockState::Created);
     handle()->destroy();
     m_status = WSessionLock::LockState::Finished;
-    emit q->finished();
+    Q_EMIT q->finished();
 }
 
 WSessionLock::WSessionLock(qw_session_lock_v1 *handle, QObject *parent)
@@ -114,17 +114,17 @@ WSessionLock::WSessionLock(qw_session_lock_v1 *handle, QObject *parent)
     });
     connect(handle, &qw_session_lock_v1::notify_unlock, this, [d, this]() {
         Q_ASSERT(d->m_status == LockState::Locked);
-        emit unlocked();
+        Q_EMIT unlocked();
     });
     connect(handle, &qw_session_lock_v1::before_destroy, this, [d, this]() {
         switch (lockState()) {
             case LockState::Created:
                 d->setStatus(LockState::Canceled);
-                emit canceled();
+                Q_EMIT canceled();
                 return;
             case LockState::Locked:
                 d->setStatus(LockState::Abandoned);
-                emit abandoned();
+                Q_EMIT abandoned();
                 return;
             case LockState::Finished:
             case LockState::Unlocked:

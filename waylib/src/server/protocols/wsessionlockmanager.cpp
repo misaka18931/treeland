@@ -46,7 +46,7 @@ void WSessionLockManagerPrivate::onNewLock(qw_session_lock_v1 *sessionLock)
     });
 
     lockList.append(lock);
-    emit q->lockCreated(lock);
+    Q_EMIT q->lockCreated(lock);
 }
 
 void WSessionLockManagerPrivate::onLockDestroy(qw_session_lock_v1 *sessionLock)
@@ -56,7 +56,7 @@ void WSessionLockManagerPrivate::onLockDestroy(qw_session_lock_v1 *sessionLock)
     
     bool ok = lockList.removeOne(lock);
     Q_ASSERT(ok);
-    emit q->lockDestroyed(lock);
+    Q_EMIT q->lockDestroyed(lock);
     lock->safeDeleteLater();
 }
 
@@ -95,7 +95,7 @@ void WSessionLockManager::destroy([[maybe_unused]] WServer *server)
     auto lockList = d->lockList;
     d->lockList.clear();
     for (auto lock : std::as_const(lockList)) {
-        emit lockDestroyed(lock);
+        Q_EMIT lockDestroyed(lock);
         lock->safeDeleteLater();
     }
 }
