@@ -92,12 +92,10 @@ void LockScreen::addOutput(Output *output)
 {
     SurfaceContainer::addOutput(output);
 #if EXT_SESSION_LOCK_V1
-    auto outputitem = output->outputItem();
-    connect(outputitem, &WOutputItem::geometryChanged, this, [this, output]() {
-        onOutputSizeChanged(output);
-    });
+    auto outputItem = output->outputItem();
+    connect(outputItem, &WOutputItem::geometryChanged, this, &LockScreen::onOutputGeometryChanged);
 
-    const auto &[_, ok] = m_lockSurfaces.emplace(output, nullptr);
+    const auto &[_, ok] = m_lockSurfaces.emplace(outputItem, nullptr);
     Q_ASSERT(ok);
 #endif
 
@@ -129,9 +127,9 @@ void LockScreen::removeOutput(Output *output)
 {
     SurfaceContainer::removeOutput(output);
 #if EXT_SESSION_LOCK_V1
-    Q_ASSERT(m_lockSurfaces.erase(output) == 1);
-
-    m_fallbackItems.erase(output);
+    auto outputItem = output->outputItem();
+    m_lockSurfaces.erase(outputItem);
+    m_fallbackItems.erase(outputItem);
 
     if (!m_impl) {
         return;
@@ -197,16 +195,17 @@ void LockScreen::onLockSurfaceAdded(WSessionLockSurface *surface)
         return;
     }
 
-    m_fallbackItems.erase(output);
+    auto outputItem = output->outputItem();
+
+    m_fallbackItems.erase(outputItem);
     // protocol error if multiple surfaces for one output
-    Q_ASSERT(!m_lockSurfaces[output]);
-    m_lockSurfaces[output] = std::unique_ptr<WSessionLockSurface, std::function<void(WSessionLockSurface*)>>(surface, [this](WSessionLockSurface* s) {
+    Q_ASSERT(!m_lockSurfaces[outputItem]);
+    m_lockSurfaces[outputItem] = std::unique_ptr<WSessionLockSurface, std::function<void(WSessionLockSurface*)>>(surface, [this](WSessionLockSurface* s) {
         doRemoveLockSurface(s);
     });
 
     // Configure the lock surface to match the output's full size
-    const auto geo = output->geometry();
-    surface->configureSize(geo.size().toSize());
+    surface->configureSize(outputItem->size().toSize());
 
     auto wrapper = new SurfaceWrapper(
         Helper::instance()->qmlEngine(), surface, SurfaceWrapper::Type::LockScreen);
@@ -215,7 +214,7 @@ void LockScreen::onLockSurfaceAdded(WSessionLockSurface *surface)
     wrapper->setSkipMutiTaskView(true);
     wrapper->setSkipSwitcher(true);
     wrapper->setOwnsOutput(output);
-    wrapper->setPosition(geo.topLeft());
+    wrapper->setPosition(outputItem->position());
 
     addSurface(wrapper);
 
@@ -231,35 +230,36 @@ void LockScreen::onLockSurfaceRemoved(WSessionLockSurface *surface)
     if (!m_sessionLock) {
         return;
     }
-
     auto output = Helper::instance()->getOutput(surface->output());
     if (!output) {
         qCWarning(treelandShell) << "removing lock surface with no output!";
         return;
     }
 
-    if (m_lockSurfaces[output]) {
+    auto outputItem = output->outputItem();
+
+    if (m_lockSurfaces[outputItem]) {
         if (isLocked()) {
             // display a solid color for output
-            createFallbackItem(output);
+            createFallbackItem(outputItem);
         }
-        m_lockSurfaces[output].reset();
+        m_lockSurfaces[outputItem].reset();
     }
 }
 
-void LockScreen::onOutputSizeChanged(Output *output)
+void LockScreen::onOutputGeometryChanged()
 {
-    Q_ASSERT(m_lockSurfaces.find(output) != m_lockSurfaces.end());
+    WOutputItem *outputItem = qobject_cast<WOutputItem *>(QObject::sender());
+    Q_ASSERT(m_lockSurfaces.find(outputItem) != m_lockSurfaces.end());
 
-    auto *lockSurface = m_lockSurfaces[output].get();
+    auto *lockSurface = m_lockSurfaces[outputItem].get();
     if (lockSurface) {
         // Resize the lock surface to match the new output size
-        const auto geo = output->geometry();
-        lockSurface->configureSize(geo.size().toSize());
+        lockSurface->configureSize(outputItem->size().toSize());
 
         auto wrapper = rootContainer()->getSurface(lockSurface);
         if (wrapper) {
-            wrapper->setPosition(geo.topLeft());
+            wrapper->setPosition(outputItem->position());
         }
     }
 }
@@ -320,9 +320,9 @@ void LockScreen::onExternalLockAbandoned() {
     }
 }
 
-void LockScreen::createFallbackItem(Output *output)
+void LockScreen::createFallbackItem(WOutputItem *outputItem)
 {
-    if (!output || m_fallbackItems.find(output) != m_fallbackItems.end()) {
+    if (!outputItem || m_fallbackItems.find(outputItem) != m_fallbackItems.end()) {
         return;
     }
 
@@ -330,11 +330,11 @@ void LockScreen::createFallbackItem(Output *output)
     Q_ASSERT(engine);
 
     auto *fallbackItem = engine->createLockScreenFallback(this, {
-        {"outputItem", QVariant::fromValue(output->outputItem())}
+        {"outputItem", QVariant::fromValue(outputItem)}
     });
     Q_ASSERT(fallbackItem);
 
-    m_fallbackItems[output] = std::unique_ptr<QQuickItem, std::function<void(QQuickItem*)>>(
+    m_fallbackItems[outputItem] = std::unique_ptr<QQuickItem, std::function<void(QQuickItem*)>>(
         fallbackItem, [](QQuickItem *item) {
             if (item) {
                 item->deleteLater();

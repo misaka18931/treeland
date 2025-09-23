@@ -8,7 +8,6 @@
 #include <map>
 #include <memory>
 
-class Output;
 class QTimer;
 class ILockScreen;
 
@@ -16,6 +15,7 @@ class ILockScreen;
 WAYLIB_SERVER_BEGIN_NAMESPACE
 class WSessionLock;
 class WSessionLockSurface;
+class WOutputItem;
 WAYLIB_SERVER_END_NAMESPACE
 Q_MOC_INCLUDE(<wsessionlock.h>)
 Q_MOC_INCLUDE(<wsessionlocksurface.h>)
@@ -54,9 +54,9 @@ public Q_SLOTS:
     void onExternalLock(WSessionLock *lock);
 
 private:
-    void onOutputSizeChanged(Output *output);
+    void onOutputGeometryChanged();
     void doRemoveLockSurface(WSessionLockSurface *surface);
-    void createFallbackItem(Output *output);
+    void createFallbackItem(WOutputItem *outputItem);
 
 private Q_SLOTS:
     void onLockSurfaceAdded(WSessionLockSurface *surface);
@@ -74,8 +74,8 @@ private:
     std::map<Output *, std::unique_ptr<QQuickItem, void (*)(QQuickItem *)>> m_components;
     std::unique_ptr<QTimer> m_delayTimer;
 #ifdef EXT_SESSION_LOCK_V1
-    std::map<Output *, std::unique_ptr<WSessionLockSurface, std::function<void(WSessionLockSurface*)>>> m_lockSurfaces;
-    std::map<Output *, std::unique_ptr<QQuickItem, std::function<void(QQuickItem*)>>> m_fallbackItems;
+    std::map<WOutputItem *, std::unique_ptr<WSessionLockSurface, std::function<void(WSessionLockSurface*)>>> m_lockSurfaces;
+    std::map<WOutputItem *, std::unique_ptr<QQuickItem, std::function<void(QQuickItem*)>>> m_fallbackItems;
     WSessionLock* m_sessionLock{ nullptr };
 #endif
 };

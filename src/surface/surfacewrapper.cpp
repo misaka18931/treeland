@@ -11,11 +11,6 @@
 #include "common/treelandlogging.h"
 #include "seat/helper.h"
 
-#ifdef EXT_SESSION_LOCK_V1
-#include "wsessionlocksurfaceitem.h"
-#endif
-
-
 #include <winputpopupsurfaceitem.h>
 #include <wlayersurface.h>
 #include <wlayersurfaceitem.h>
@@ -89,7 +84,7 @@ SurfaceWrapper::SurfaceWrapper(QmlEngine *qmlEngine,
         break;
 #ifdef EXT_SESSION_LOCK_V1
     case Type::LockScreen:
-        m_surfaceItem = new WSessionLockSurfaceItem(this);
+        m_surfaceItem = new WSurfaceItem(this);
         break;
 #endif
     default:
