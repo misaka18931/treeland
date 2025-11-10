@@ -123,9 +123,8 @@
         "type": "github"
       },
       "original": {
-        "owner": "linuxdeepin",
-        "repo": "treeland-protocols",
-        "type": "github"
+        "type": "git",
+        "url": "file:///home/akari/UnionTech/treeland-protocols"
       }
     }
   },
