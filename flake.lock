@@ -11,14 +11,16 @@
         "nixpkgs": [
           "nixpkgs"
         ],
-        "treeland-protocols": "treeland-protocols"
+        "treeland-protocols": [
+          "treeland-protocols"
+        ]
       },
       "locked": {
-        "lastModified": 1767689953,
-        "narHash": "sha256-+WU4WXLBAdxHtvxzuVlrjenSE8uT77a+0N7aG+Z78mI=",
+        "lastModified": 1764321604,
+        "narHash": "sha256-ABdtBQOD3IXei35Ndo9ZfJ8xs/FRCeoF3C2hCS5HC8E=",
         "owner": "linuxdeepin",
         "repo": "ddm",
-        "rev": "e767ff2d5341c3da5508599f09ef6d612b7cf4f2",
+        "rev": "aaeba96b067718ead388d6f1393dacd7d12507be",
         "type": "github"
       },
       "original": {
@@ -82,7 +84,7 @@
         "flake-utils": "flake-utils",
         "nix-filter": "nix-filter",
         "nixpkgs": "nixpkgs",
-        "treeland-protocols": "treeland-protocols_2"
+        "treeland-protocols": "treeland-protocols"
       }
     },
     "systems": {
@@ -101,35 +103,6 @@
       }
     },
     "treeland-protocols": {
-      "inputs": {
-        "flake-utils": [
-          "ddm",
-          "flake-utils"
-        ],
-        "nix-filter": [
-          "ddm",
-          "nix-filter"
-        ],
-        "nixpkgs": [
-          "ddm",
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1756440142,
-        "narHash": "sha256-wO89wmKLMnHvjB19vPMGetutdPlji32ZHSnTll3+eFY=",
-        "owner": "linuxdeepin",
-        "repo": "treeland-protocols",
-        "rev": "d8d6294b133aa7b02229e4311085773f623fe46f",
-        "type": "github"
-      },
-      "original": {
-        "owner": "linuxdeepin",
-        "repo": "treeland-protocols",
-        "type": "github"
-      }
-    },
-    "treeland-protocols_2": {
       "inputs": {
         "flake-utils": [
           "flake-utils"
@@ -151,8 +124,9 @@
         "url": "file:///home/akari/UnionTech/treeland-protocols"
       },
       "original": {
-        "type": "git",
-        "url": "file:///home/akari/UnionTech/treeland-protocols"
+        "owner": "linuxdeepin",
+        "repo": "treeland-protocols",
+        "type": "github"
       }
     }
   },

@@ -10,10 +10,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-utils.follows = "flake-utils";
       inputs.nix-filter.follows = "nix-filter";
-      # inputs.treeland-protocols.follows = "treeland-protocols";
+      inputs.treeland-protocols.follows = "treeland-protocols";
     };
     treeland-protocols = {
-      url = "git+file:///home/akari/UnionTech/treeland-protocols";
+      url = "github:linuxdeepin/treeland-protocols";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-utils.follows = "flake-utils";
       inputs.nix-filter.follows = "nix-filter";
