@@ -10,14 +10,17 @@
         ],
         "nixpkgs": [
           "nixpkgs"
+        ],
+        "treeland-protocols": [
+          "treeland-protocols"
         ]
       },
       "locked": {
-        "lastModified": 1753066592,
-        "narHash": "sha256-jtFBL0yT1fBwatqvRuCvp0LjKOChU4YGmZvMpIIrAmE=",
+        "lastModified": 1761827086,
+        "narHash": "sha256-/jLJ7rYOEq1Umao+Tep1plKKAAqKl15eQfOjtTqMkX0=",
         "owner": "linuxdeepin",
         "repo": "ddm",
-        "rev": "e3a27b23cefe51adbfab973043b26959136ea4ad",
+        "rev": "10153e16697011fb1b8ddd17242ddaf742d0d446",
         "type": "github"
       },
       "original": {
@@ -112,17 +115,17 @@
         ]
       },
       "locked": {
-        "lastModified": 1737101824,
-        "narHash": "sha256-keu/J/mEW7VIQ2Nyo9SaOreUYoDdgxONb66c6XN3Gnc=",
-        "owner": "linuxdeepin",
-        "repo": "treeland-protocols",
-        "rev": "b087c563ad5b07f61ebbe2417251839ef6876d45",
-        "type": "github"
+        "lastModified": 1762732649,
+        "narHash": "sha256-heWWJjBqod+t9o02owGMl8v/N1Qhirf8ClpniWH8IY4=",
+        "ref": "refs/heads/master",
+        "rev": "e9237f0d1ea2453dc2ee22aec6e04d17b6078dd0",
+        "revCount": 25,
+        "type": "git",
+        "url": "file:///home/akari/UnionTech/treeland-protocols"
       },
       "original": {
-        "owner": "linuxdeepin",
-        "repo": "treeland-protocols",
-        "type": "github"
+        "type": "git",
+        "url": "file:///home/akari/UnionTech/treeland-protocols"
       }
     }
   },
