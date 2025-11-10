@@ -10,9 +10,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-utils.follows = "flake-utils";
       inputs.nix-filter.follows = "nix-filter";
+      # inputs.treeland-protocols.follows = "treeland-protocols";
     };
     treeland-protocols = {
-      url = "github:linuxdeepin/treeland-protocols";
+      url = "git+file:///home/akari/UnionTech/treeland-protocols";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-utils.follows = "flake-utils";
       inputs.nix-filter.follows = "nix-filter";
@@ -188,14 +189,12 @@
               libdrm
               vulkan-loader
               seatd
+              cmake
+              ninja
             ];
 
             inputsFrom = [
-              self.packages.${system}.treeland.override {
-                  #It's submodule, prevent infinite loop calls
-                  waylib = null;
-                  qwlroot = null;
-              }
+              self.packages.${system}.treeland
             ];
 
             shellHook =
@@ -206,8 +205,8 @@
               ''
                 #export QT_LOGGING_RULES="*.debug=true;qt.*.debug=false"
                 #export WAYLAND_DEBUG=1
-                export QT_PLUGIN_PATH=${makeQtpluginPath (with pkgs.qt6; [ qtbase qtdeclarative qtimageformats qtwayland qtsvg ])}
-                export QML2_IMPORT_PATH=${makeQmlpluginPath (with pkgs; with qt6; [ qtdeclarative deepin.dtk6declarative ] )}
+                export QT_PLUGIN_PATH=${makeQtpluginPath (with pkgs.qt6; [ qtbase qtdeclarative qtimageformats qtwayland qtsvg qt5compat ])}
+                export QML2_IMPORT_PATH=${makeQmlpluginPath (with pkgs; with qt6; [ qtdeclarative deepin.dtk6declarative qt5compat ] )}
                 export QML_IMPORT_PATH=$QML2_IMPORT_PATH
               '';
           };
