@@ -28,6 +28,8 @@
   nixos-artwork,
   qwlroots,
   waylib,
+  debug ? true,
+  examples ? false
 }:
 
 stdenv.mkDerivation (finalAttrs: {
@@ -91,6 +93,8 @@ stdenv.mkDerivation (finalAttrs: {
     waylib
   ];
 
+  cmakeBuildType = if debug then "Debug" else "Release";
+
   cmakeFlags = [
     (lib.cmakeFeature "QT_IMPORTS_DIR" "${placeholder "out"}/${qtbase.qtQmlPrefix}")
     (lib.cmakeFeature "CMAKE_INSTALL_SYSCONFDIR" "${placeholder "out"}/etc")
@@ -98,7 +102,9 @@ stdenv.mkDerivation (finalAttrs: {
     (lib.cmakeFeature "SYSTEMD_SYSUSERS_DIR" "${placeholder "out"}/lib/sysusers.d")
     (lib.cmakeFeature "SYSTEMD_TMPFILES_DIR" "${placeholder "out"}/lib/tmpfiles.d")
     (lib.cmakeFeature "DBUS_CONFIG_DIR" "${placeholder "out"}/share/dbus-1/system.d")
+    (lib.cmakeBool "ADDRESS_SANITIZER" debug)
     (lib.cmakeBool "WITH_SUBMODULE_WAYLIB" false)
+    (lib.cmakeBool "BUILD_EXAMPLES" false)
   ];
 
   env.PKG_CONFIG_SYSTEMD_SYSTEMDUSERUNITDIR = "${placeholder "out"}/lib/systemd/user";

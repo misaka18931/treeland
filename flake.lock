@@ -10,14 +10,15 @@
         ],
         "nixpkgs": [
           "nixpkgs"
-        ]
+        ],
+        "treeland-protocols": "treeland-protocols"
       },
       "locked": {
-        "lastModified": 1753066592,
-        "narHash": "sha256-jtFBL0yT1fBwatqvRuCvp0LjKOChU4YGmZvMpIIrAmE=",
+        "lastModified": 1767689953,
+        "narHash": "sha256-+WU4WXLBAdxHtvxzuVlrjenSE8uT77a+0N7aG+Z78mI=",
         "owner": "linuxdeepin",
         "repo": "ddm",
-        "rev": "e3a27b23cefe51adbfab973043b26959136ea4ad",
+        "rev": "e767ff2d5341c3da5508599f09ef6d612b7cf4f2",
         "type": "github"
       },
       "original": {
@@ -46,11 +47,11 @@
     },
     "nix-filter": {
       "locked": {
-        "lastModified": 1731533336,
-        "narHash": "sha256-oRam5PS1vcrr5UPgALW0eo1m/5/pls27Z/pabHNy2Ms=",
+        "lastModified": 1757882181,
+        "narHash": "sha256-+cCxYIh2UNalTz364p+QYmWHs0P+6wDhiWR4jDIKQIU=",
         "owner": "numtide",
         "repo": "nix-filter",
-        "rev": "f7653272fd234696ae94229839a99b73c9ab7de0",
+        "rev": "59c44d1909c72441144b93cf0f054be7fe764de5",
         "type": "github"
       },
       "original": {
@@ -81,7 +82,7 @@
         "flake-utils": "flake-utils",
         "nix-filter": "nix-filter",
         "nixpkgs": "nixpkgs",
-        "treeland-protocols": "treeland-protocols"
+        "treeland-protocols": "treeland-protocols_2"
       }
     },
     "systems": {
@@ -102,6 +103,35 @@
     "treeland-protocols": {
       "inputs": {
         "flake-utils": [
+          "ddm",
+          "flake-utils"
+        ],
+        "nix-filter": [
+          "ddm",
+          "nix-filter"
+        ],
+        "nixpkgs": [
+          "ddm",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1756440142,
+        "narHash": "sha256-wO89wmKLMnHvjB19vPMGetutdPlji32ZHSnTll3+eFY=",
+        "owner": "linuxdeepin",
+        "repo": "treeland-protocols",
+        "rev": "d8d6294b133aa7b02229e4311085773f623fe46f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "linuxdeepin",
+        "repo": "treeland-protocols",
+        "type": "github"
+      }
+    },
+    "treeland-protocols_2": {
+      "inputs": {
+        "flake-utils": [
           "flake-utils"
         ],
         "nix-filter": [
@@ -112,17 +142,17 @@
         ]
       },
       "locked": {
-        "lastModified": 1737101824,
-        "narHash": "sha256-keu/J/mEW7VIQ2Nyo9SaOreUYoDdgxONb66c6XN3Gnc=",
-        "owner": "linuxdeepin",
-        "repo": "treeland-protocols",
-        "rev": "b087c563ad5b07f61ebbe2417251839ef6876d45",
-        "type": "github"
+        "lastModified": 1768545019,
+        "narHash": "sha256-RqrbUZ+hUV1evjaMXsDxTYX1jmWizT1Gzhe2v891U8M=",
+        "ref": "refs/heads/master",
+        "rev": "87e253a9a6fb4bbbba9f50f37b166e57950cca10",
+        "revCount": 42,
+        "type": "git",
+        "url": "file:///home/akari/UnionTech/treeland-protocols"
       },
       "original": {
-        "owner": "linuxdeepin",
-        "repo": "treeland-protocols",
-        "type": "github"
+        "type": "git",
+        "url": "file:///home/akari/UnionTech/treeland-protocols"
       }
     }
   },
