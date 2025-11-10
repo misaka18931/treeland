@@ -21,6 +21,7 @@
 , pkgs ? null
 , waylib ? null
 , debug ? true
+, examples ? false
 }:
 
 stdenv.mkDerivation (finalAttrs: {
@@ -64,7 +65,7 @@ stdenv.mkDerivation (finalAttrs: {
   cmakeBuildType = if debug then "Debug" else "Release";
 
   cmakeFlags = [
-    (lib.cmakeBool "BUILD_EXAMPLES" false)
+    (lib.cmakeBool "BUILD_EXAMPLES" examples)
     (lib.cmakeBool "ADDRESS_SANITIZER" debug)
     (lib.cmakeBool "WITH_SUBMODULE_QWLROOTS" false)
   ];
