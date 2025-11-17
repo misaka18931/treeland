@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "shortcutmanager.h"
+#include "seat/helper.h"
 
 #include "modules/shortcut/impl/shortcut_manager_impl.h"
 
@@ -9,7 +10,6 @@
 #include <wayland-util.h>
 
 #include <qwdisplay.h>
-
 #include <QAction>
 
 #include <pwd.h>
@@ -21,45 +21,23 @@ ShortcutV1::ShortcutV1(QObject *parent)
 {
 }
 
-void ShortcutV1::onNewContext(uid_t uid, treeland_shortcut_context_v1 *context)
+void ShortcutV1::onNewShortcut(treeland_shortcut_v1 *shortcut)
 {
-    QAction *action = new QAction(context);
-    action->setShortcut(QString(context->key));
-
-    connect(action, &QAction::triggered, this, [context] {
-        context->send_shortcut();
+    connect(shortcut, &treeland_shortcut_v1::gestureActivated, this, [this, shortcut]() {
+        activateShortcut(shortcut);
     });
-
-    connect(context, &treeland_shortcut_context_v1::before_destroy, this, [this, uid, action] {
-        m_actions.remove(uid);
-        action->deleteLater();
-    });
-
-    if (!m_actions.count(uid)) {
-        m_actions[uid] = {};
-    }
-
-    auto find = std::ranges::find_if(m_actions[uid], [action](QAction *a) {
-        return a->shortcut() == action->shortcut();
-    });
-
-    if (find == m_actions[uid].end()) {
-        m_actions[uid].push_back(action);
-    }
-}
-
-std::vector<QAction *> ShortcutV1::actions(uid_t uid) const
-{
-    return m_actions[uid];
 }
 
 void ShortcutV1::create(WServer *server)
 {
     m_manager = treeland_shortcut_manager_v1::create(server->handle());
-    connect(m_manager, &treeland_shortcut_manager_v1::newContext, this, &ShortcutV1::onNewContext);
+    connect(m_manager, &treeland_shortcut_manager_v1::newShortcut, this, &ShortcutV1::onNewShortcut);
 }
 
-void ShortcutV1::destroy([[maybe_unused]] WServer *server) { }
+void ShortcutV1::destroy([[maybe_unused]] WServer *server)
+{
+
+}
 
 wl_global *ShortcutV1::global() const
 {
@@ -69,4 +47,20 @@ wl_global *ShortcutV1::global() const
 QByteArrayView ShortcutV1::interfaceName() const
 {
     return "treeland_shortcut_manager_v1";
+}
+
+bool ShortcutV1::handleKeySequence(uid_t uid, const QKeySequence &sequence)
+{
+    if (m_manager->keyMap.contains(uid) && m_manager->keyMap[uid].contains(sequence)) {
+        activateShortcut(m_manager->keyMap[uid][sequence]);
+        return true;
+    }
+    return false;
+}
+
+void ShortcutV1::activateShortcut(treeland_shortcut_v1 *shortcut)
+{
+    for (auto action : shortcut->actions)
+        Q_EMIT requestCompositorAction(action);
+    shortcut->sendActivated();
 }

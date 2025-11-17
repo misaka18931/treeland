@@ -4,14 +4,11 @@
 #pragma once
 
 #include <wserver.h>
-
+#include "modules/shortcut/impl/shortcut_manager_impl.h"
 #include <QObject>
 #include <QQmlEngine>
 
 class QAction;
-
-class treeland_shortcut_context_v1;
-class treeland_shortcut_manager_v1;
 
 WAYLIB_SERVER_BEGIN_NAMESPACE
 class WServer;
@@ -24,32 +21,26 @@ class ShortcutV1
     , public WAYLIB_SERVER_NAMESPACE::WServerInterface
 {
     Q_OBJECT
-
 public:
-    enum MetaKeyCheck
-    {
-        ShortcutOverride = 0x1,
-        KeyPress = 0x2,
-        KeyRelease = 0x4,
-    };
-
     explicit ShortcutV1(QObject *parent = nullptr);
     QByteArrayView interfaceName() const override;
-
-    std::vector<QAction *> actions(uid_t uid) const;
+    bool handleKeySequence(uid_t uid, const QKeySequence &sequence);
 
 protected:
     void create(WServer *server) override;
     void destroy(WServer *server) override;
     wl_global *global() const override;
 
+Q_SIGNALS:
+    void requestCompositorAction(treeland_shortcut_v1_action action);
+
 private Q_SLOTS:
-    void onNewContext(uid_t uid, treeland_shortcut_context_v1 *context);
+    void onNewShortcut(treeland_shortcut_v1 *shortcut);
 
 private:
     treeland_shortcut_manager_v1 *m_manager = nullptr;
-    QMap<uid_t, std::vector<QAction *>> m_actions;
+    void activateShortcut(treeland_shortcut_v1 *shortcut);
 };
 
-Q_DECLARE_FLAGS(MetaKeyChecks, ShortcutV1::MetaKeyCheck)
-Q_DECLARE_OPERATORS_FOR_FLAGS(MetaKeyChecks)
+// Q_DECLARE_FLAGS(MetaKeyChecks, ShortcutV1::MetaKeyCheck)
+// Q_DECLARE_OPERATORS_FOR_FLAGS(MetaKeyChecks)
