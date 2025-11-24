@@ -224,7 +224,8 @@ Helper::Helper(QObject *parent)
 
     connect(m_renderWindow, &QQuickWindow::activeFocusItemChanged, this, [this]() {
         auto wrapper = keyboardFocusSurface();
-        m_seat->setKeyboardFocusSurface(wrapper ? wrapper->surface() : nullptr);
+        if (wrapper)
+            m_seat->setKeyboardFocusSurface(wrapper ? wrapper->surface() : nullptr);
     });
 
     connect(m_multiTaskViewGesture,
@@ -2486,7 +2487,7 @@ void Helper::handleWindowPicker(WindowPickerInterface *picker)
         connect(windowPicker,
                 &WindowPicker::windowPicked,
                 this,
-                [this, picker, windowPicker](WSurfaceItem *surfaceItem) {
+                [picker, windowPicker](WSurfaceItem *surfaceItem) {
                     if (surfaceItem) {
                         auto credentials = WClient::getCredentials(
                             surfaceItem->surface()->waylandClient()->handle());
@@ -2569,6 +2570,10 @@ void Helper::setCurrentMode(CurrentMode mode)
 
 void Helper::showLockScreen(bool switchToGreeter)
 {
+    if (!m_lockScreen || !m_lockScreen->available()) {
+        return;
+    }
+
     if (m_lockScreen->isLocked()) {
         return;
     }
