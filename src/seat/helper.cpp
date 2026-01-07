@@ -3,64 +3,60 @@
 
 #include "helper.h"
 
-#include "modules/capture/capture.h"
-#include "utils/cmdline.h"
-#include "utils/fpsdisplaymanager.h"
-#include "modules/dde-shell/ddeshellattached.h"
-#include "modules/dde-shell/ddeshellmanagerinterfacev1.h"
-#include "input/inputdevice.h"
-#include "core/layersurfacecontainer.h"
-#include "greeter/usermodel.h"
+
 #ifdef EXT_SESSION_LOCK_V1
 #include "wsessionlock.h"
 #include "wsessionlockmanager.h"
+#include "core/lockscreen.h"
 #endif
-
-#include <rhi/qrhi.h>
-
-#if !defined(DISABLE_DDM) || defined(EXT_SESSION_LOCK_V1)
-#  include "core/lockscreen.h"
+#ifndef DISABLE_DDM
+#include "core/lockscreen.h"
 #endif
-#include "interfaces/multitaskviewinterface.h"
-#include "output/output.h"
-#include "output/outputconfigstate.h"
-#include "output/outputlifecyclemanager.h"
-#include "modules/output-manager/outputmanagement.h"
-#include "modules/personalization/personalizationmanager.h"
+#include "common/treelandlogging.h"
+#include "core/layersurfacecontainer.h"
 #include "core/qmlengine.h"
 #include "core/rootsurfacecontainer.h"
 #include "core/shellhandler.h"
+#include "core/treeland.h"
+#include "core/windowpicker.h"
+#include "greeter/usermodel.h"
+#include "input/inputdevice.h"
+#include "interfaces/multitaskviewinterface.h"
+#include "modules/app-id-resolver/appidresolver.h"
+#include "modules/capture/capture.h"
+#include "modules/dde-shell/ddeshellattached.h"
+#include "modules/dde-shell/ddeshellmanagerinterfacev1.h"
+#include "modules/ddm/ddminterfacev1.h"
+#include "modules/keystate/keystate.h"
+#include "modules/output-manager/outputmanagement.h"
+#include "modules/personalization/personalizationmanager.h"
+#include "modules/prelaunch-splash/prelaunchsplash.h"
+#include "modules/screensaver/screensaverinterfacev1.h"
+#include "modules/shortcut/shortcutcontroller.h"
+#include "modules/shortcut/shortcutmanager.h"
+#include "modules/shortcut/shortcutrunner.h"
+#include "modules/wallpaper-color/wallpapercolor.h"
+#include "output/outputconfigstate.h"
+#include "output/output.h"
+#include "output/outputlifecyclemanager.h"
 #include "surface/surfacecontainer.h"
 #include "surface/surfacewrapper.h"
-#include "modules/wallpaper-color/wallpapercolor.h"
-#include "core/windowpicker.h"
-#include "workspace/workspace.h"
-#include "common/treelandlogging.h"
-#include "modules/ddm/ddminterfacev1.h"
 #include "treelandconfig.hpp"
 #include "treelanduserconfig.hpp"
-#include "core/treeland.h"
-#include "greeter/greeterproxy.h"
-#include "modules/screensaver/screensaverinterfacev1.h"
+#include "utils/cmdline.h"
+#include "utils/fpsdisplaymanager.h"
+#include "workspace/workspace.h"
 #include "xsettings/settingmanager.h"
-#include "modules/shortcut/shortcutmanager.h"
-#include "modules/shortcut/shortcutcontroller.h"
-#include "modules/shortcut/shortcutrunner.h"
-#include "modules/prelaunch-splash/prelaunchsplash.h"
-#include "modules/app-id-resolver/appidresolver.h"
-#include "modules/keystate/keystate.h"
 
 #include <xcb/xcb.h>
 #include <xcb/xproto.h>
 
 #include <WBackend>
-#include <WForeignToplevel>
-#include <WOutput>
-#include <WServer>
-#include <WSurfaceItem>
-#include <WXdgOutput>
 #include <wcursorshapemanagerv1.h>
+#include <wextimagecapturesourcev1impl.h>
+#include <WForeignToplevel>
 #include <wlayersurface.h>
+#include <WOutput>
 #include <woutputhelper.h>
 #include <woutputitem.h>
 #include <woutputlayout.h>
@@ -71,66 +67,69 @@
 #include <wquickcursor.h>
 #include <wrenderhelper.h>
 #include <wseat.h>
+#include <wsecuritycontextmanager.h>
+#include <WServer>
 #include <wsocket.h>
+#include <WSurfaceItem>
 #include <wtoplevelsurface.h>
+#include <WXdgOutput>
 #include <wxdgshell.h>
+#include <wxdgtoplevelsurface.h>
 #include <wxwayland.h>
 #include <wxwaylandsurface.h>
-#include <wxdgtoplevelsurface.h>
-#include <wextimagecapturesourcev1impl.h>
-#include <wsecuritycontextmanager.h>
 
 #include <qwallocator.h>
+#include <qwalphamodifierv1.h>
 #include <qwbackend.h>
 #include <qwbuffer.h>
 #include <qwcompositor.h>
 #include <qwdatacontrolv1.h>
 #include <qwdatadevice.h>
 #include <qwdisplay.h>
+#include <qwdrm.h>
 #include <qwextdatacontrolv1.h>
-#include <qwextimagecopycapturev1.h>
-#include <qwextimagecapturesourcev1.h>
 #include <qwextforeigntoplevelimagecapturesourcemanagerv1.h>
 #include <qwextforeigntoplevellistv1.h>
+#include <qwextimagecapturesourcev1.h>
+#include <qwextimagecopycapturev1.h>
 #include <qwfractionalscalemanagerv1.h>
 #include <qwgammacontorlv1.h>
+#include <qwidleinhibitv1.h>
+#include <qwidlenotifyv1.h>
 #include <qwlayershellv1.h>
 #include <qwlogging.h>
 #include <qwoutput.h>
+#include <qwoutputpowermanagementv1.h>
 #include <qwrenderer.h>
 #include <qwscreencopyv1.h>
 #include <qwsession.h>
 #include <qwsubcompositor.h>
 #include <qwviewporter.h>
-#include <qwxwaylandsurface.h>
-#include <qwoutputpowermanagementv1.h>
-#include <qwidlenotifyv1.h>
-#include <qwidleinhibitv1.h>
-#include <qwalphamodifierv1.h>
-#include <qwdrm.h>
 #include <qwxwayland.h>
+#include <qwxwaylandsurface.h>
 
 #include <QAction>
+#include <QDBusConnection>
+#include <QDBusInterface>
+#include <QDBusObjectPath>
 #include <QKeySequence>
 #include <QLoggingCategory>
 #include <QMouseEvent>
 #include <QQmlContext>
 #include <QQuickWindow>
 #include <QtConcurrent>
-#include <QDBusConnection>
-#include <QDBusInterface>
-#include <QDBusObjectPath>
+#include <rhi/qrhi.h>
 
-#include <pwd.h>
-#include <utility>
 #include <functional>
 #include <linux/input.h>
+#include <pwd.h>
 #include <sys/ioctl.h>
+#include <utility>
 #include <wayland-util.h>
 
-#define WLR_FRACTIONAL_SCALE_V1_VERSION 1
-#define EXT_DATA_CONTROL_MANAGER_V1_VERSION 1
 #define _DEEPIN_NO_TITLEBAR "_DEEPIN_NO_TITLEBAR"
+#define EXT_DATA_CONTROL_MANAGER_V1_VERSION 1
+#define WLR_FRACTIONAL_SCALE_V1_VERSION 1
 
 static xcb_atom_t internAtom(xcb_connection_t *connection, const char *name, bool onlyIfExists)
 {
