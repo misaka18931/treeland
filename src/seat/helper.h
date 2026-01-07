@@ -22,107 +22,104 @@
 #include <QList>
 #include <optional>
 
-Q_MOC_INCLUDE(<wtoplevelsurface.h>)
-Q_MOC_INCLUDE(<wxdgsurface.h>)
+Q_MOC_INCLUDE(<QDBusObjectPath>)
 Q_MOC_INCLUDE(<qwgammacontorlv1.h>)
 Q_MOC_INCLUDE(<qwoutputmanagementv1.h>)
-Q_MOC_INCLUDE("surface/surfacewrapper.h")
-Q_MOC_INCLUDE("workspace/workspace.h")
+Q_MOC_INCLUDE(<wlayersurface.h>)
+Q_MOC_INCLUDE(<wtoplevelsurface.h>)
+Q_MOC_INCLUDE(<wxdgsurface.h>)
 Q_MOC_INCLUDE("core/rootsurfacecontainer.h")
 Q_MOC_INCLUDE("modules/capture/capture.h")
-Q_MOC_INCLUDE(<wlayersurface.h>)
-Q_MOC_INCLUDE(<QDBusObjectPath>)
+Q_MOC_INCLUDE("surface/surfacewrapper.h")
+Q_MOC_INCLUDE("workspace/workspace.h")
 Q_MOC_INCLUDE("treelandconfig.hpp")
 Q_MOC_INCLUDE("treelanduserconfig.hpp")
 
 QT_BEGIN_NAMESPACE
-class QQuickItem;
 class QDBusObjectPath;
+class QQuickItem;
 QT_END_NAMESPACE
 
 WAYLIB_SERVER_BEGIN_NAMESPACE
-class WServer;
-class WOutputRenderWindow;
-class WOutputLayout;
+class WBackend;
 class WClientPrivate;
 class WCursor;
-class WBackend;
-class WOutputItem;
-class WOutputViewport;
-class WOutputLayer;
+class WExtForeignToplevelListV1;
+class WForeignToplevel;
+class WLayerSurface;
 class WOutput;
-class WXWayland;
-class WXdgDecorationManager;
+class WOutputItem;
+class WOutputLayer;
+class WOutputLayout;
+class WOutputManagerV1;
+class WOutputRenderWindow;
+class WOutputViewport;
+class WServer;
+class WSessionLock;
+class WSessionLockManager;
 class WSocket;
 class WSurface;
-class WToplevelSurface;
 class WSurfaceItem;
-class WForeignToplevel;
-class WExtForeignToplevelListV1;
-class WOutputManagerV1;
-class WLayerSurface;
-class WSessionLockManager;
-class WSessionLock;
+class WToplevelSurface;
+class WXdgDecorationManager;
+class WXWayland;
 WAYLIB_SERVER_END_NAMESPACE
 
 QW_BEGIN_NAMESPACE
-class qw_renderer;
 class qw_allocator;
 class qw_compositor;
-class qw_idle_notifier_v1;
+class qw_ext_foreign_toplevel_image_capture_source_manager_v1;
 class qw_idle_inhibit_manager_v1;
+class qw_idle_inhibitor_v1;
+class qw_idle_notifier_v1;
 class qw_output_configuration_v1;
 class qw_output_power_manager_v1;
-class qw_idle_inhibitor_v1;
+class qw_renderer;
 QW_END_NAMESPACE
 
 WAYLIB_SERVER_USE_NAMESPACE
 QW_USE_NAMESPACE
 
-class Output;
-class SurfaceWrapper;
-class SurfaceContainer;
-class RootSurfaceContainer;
-class ForeignToplevelV1;
-class LockScreen;
-class ShortcutManagerV2;
-class ShortcutRunner;
-class PersonalizationV1;
-class WallpaperColorV1;
-class WindowManagementV1;
-class Multitaskview;
-class DDEShellManagerInterfaceV1;
-class PrelaunchSplash;
-class WindowPickerInterface;
-class VirtualOutputV1;
-class ShellHandler;
-class OutputManagerV1;
 class CaptureSourceSelector;
-class treeland_window_picker_v1;
-class IMultitaskView;
-class LockScreenInterface;
+class DDEShellManagerInterfaceV1;
+class DDMInterfaceV1;
+class ForeignToplevelV1;
+class FpsDisplayManager;
 class ILockScreen;
-class UserModel;
+class IMultitaskView;
+class LockScreen;
+class LockScreenInterface;
+class Multitaskview;
+class Output;
 class OutputConfigState;
 class OutputLifecycleManager;
-class DDMInterfaceV1;
-class TreelandConfig;
-class TreelandUserConfig;
-class FpsDisplayManager;
+class OutputManagerV1;
+class PersonalizationV1;
+class PrelaunchSplash;
+class RootSurfaceContainer;
 class ScreensaverInterfaceV1;
 class SettingManager;
+class ShellHandler;
+class ShortcutManagerV2;
+class ShortcutRunner;
+class SurfaceContainer;
+class SurfaceWrapper;
+class TreelandConfig;
+class TreelandUserConfig;
+class treeland_window_picker_v1;
+class UserModel;
+class VirtualOutputV1;
+class WallpaperColorV1;
+class WindowManagementV1;
+class WindowPickerInterface;
 
+struct wlr_ext_foreign_toplevel_image_capture_source_manager_v1_request;
 struct wlr_idle_inhibitor_v1;
 struct wlr_output_power_v1_set_mode_event;
-struct wlr_ext_foreign_toplevel_image_capture_source_manager_v1_request;
 
 namespace Treeland {
 class Treeland;
 }
-
-QW_BEGIN_NAMESPACE
-class qw_ext_foreign_toplevel_image_capture_source_manager_v1;
-QW_END_NAMESPACE
 
 struct Session : QObject {
     Q_OBJECT
