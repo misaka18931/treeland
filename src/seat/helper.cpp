@@ -1606,7 +1606,7 @@ void Helper::forceActivateSurface(SurfaceWrapper *wrapper, Qt::FocusReason reaso
     Helper::instance()->activateSurface(wrapper, reason);
 }
 
-RootSurfaceContainer *Helper::rootContainer() const
+RootSurfaceContainer *Helper::rootSurfaceContainer() const
 {
     return m_rootSurfaceContainer;
 }
@@ -2503,7 +2503,7 @@ bool Helper::toggleDebugMenuBar()
 {
     bool ok = false;
 
-    const auto outputs = rootContainer()->outputs();
+    const auto outputs = rootSurfaceContainer()->outputs();
     if (outputs.isEmpty())
         return false;
 
@@ -2560,11 +2560,6 @@ void Helper::handleWindowPicker(WindowPickerInterface *picker)
                 windowPicker,
                 &WindowPicker::deleteLater);
     });
-}
-
-RootSurfaceContainer *Helper::rootSurfaceContainer() const
-{
-    return m_rootSurfaceContainer;
 }
 
 void Helper::setMultitaskViewImpl(IMultitaskView *impl)
