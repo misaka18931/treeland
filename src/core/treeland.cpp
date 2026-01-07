@@ -9,6 +9,7 @@
 #include "interfaces/multitaskviewinterface.h"
 #include "interfaces/plugininterface.h"
 #include "seat/helper.h"
+#include "session/session.h"
 #include "utils/cmdline.h"
 #include "common/treelandlogging.h"
 #include "common/constants.h"
@@ -81,6 +82,8 @@ public:
         // assert(wlroots: assert(wl_list_empty(&cur->events.button.listener_list)))
         // failed during quit(If the quit call is from the cursor's button press/release event)
         connect(qmlEngine, &QQmlEngine::quit, q, &Treeland::quit, Qt::QueuedConnection);
+        sessionManager = new SessionManager();
+        connect(sessionManager, &SessionManager::sessionChanged, q, &Treeland::SessionChanged);
         helper = qmlEngine->singletonInstance<Helper *>("Treeland", "Helper");
         connect(helper, &Helper::requestQuit, q, &Treeland::quit, Qt::QueuedConnection);
 
@@ -261,6 +264,7 @@ private:
     std::vector<PluginInterface *> plugins;
     QLocalSocket *helperSocket{ nullptr };
     Helper *helper{ nullptr };
+    SessionManager *sessionManager{ nullptr };
     QMap<QString, std::shared_ptr<QDBusUnixFileDescriptor>> userDisplayFds;
     std::vector<QAction *> shortcuts;
     std::map<PluginInterface *, QTranslator *> pluginTs;
@@ -327,10 +331,10 @@ Treeland::Treeland()
                 auto cmdArgs = cmdline.value();
 
                 auto envs = QProcessEnvironment::systemEnvironment();
-                envs.insert("WAYLAND_DISPLAY", d->helper->globalWaylandSocket()->fullServerName());
-                if (auto *xwayland = d->helper->xwaylandForUid(getuid())) {
+                envs.insert("WAYLAND_DISPLAY", d->sessionManager->globalWaylandSocket()->fullServerName());
+                if (auto *xwayland = d->sessionManager->xwaylandForUid(getuid())) {
                     envs.insert("DISPLAY", xwayland->displayName());
-                } else if (auto *current = d->helper->globalXWayland()) {
+                } else if (auto *current = d->sessionManager->globalXWayland()) {
                     envs.insert("DISPLAY", current->displayName());
                 }
                 envs.insert("XDG_SESSION_DESKTOP", "Treeland");
@@ -346,9 +350,9 @@ Treeland::Treeland()
             }
         };
         auto con =
-            connect(d->helper, &Helper::socketFileChanged, this, exec, Qt::SingleShotConnection);
+            connect(d->sessionManager, &SessionManager::socketFileChanged, this, exec, Qt::SingleShotConnection);
 
-        WSocket *defaultSocket = d->helper->globalWaylandSocket();
+        WSocket *defaultSocket = d->sessionManager->globalWaylandSocket();
         if (defaultSocket && defaultSocket->isValid()) {
             QObject::disconnect(con);
             exec();
@@ -429,7 +433,7 @@ bool Treeland::ActivateWayland(QDBusUnixFileDescriptor _fd)
     pw = getpwuid(uid);
     QString user{ pw->pw_name };
 
-    WSocket *sessionSocket = d->helper->waylandSocketForUid(uid);
+    WSocket *sessionSocket = d->sessionManager->waylandSocketForUid(uid);
     if (!sessionSocket)
         return false;
     std::shared_ptr<WSocket> socket = std::make_shared<WSocket>(sessionSocket);
@@ -473,7 +477,7 @@ void Treeland::XWaylandName()
     pw = getpwuid(uid);
     QString user{ pw->pw_name };
 
-    auto *xwayland = d->helper->xwaylandForUid(uid);
+    auto *xwayland = d->sessionManager->xwaylandForUid(uid);
     if (!xwayland) {
         auto reply = m.createErrorReply(QDBusError::InternalError,
                                         "Failed to prepare XWayland session");
