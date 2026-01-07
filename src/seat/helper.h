@@ -98,6 +98,7 @@ class PersonalizationV1;
 class PrelaunchSplash;
 class RootSurfaceContainer;
 class ScreensaverInterfaceV1;
+class SessionManager;
 class SettingManager;
 class ShellHandler;
 class ShortcutManagerV2;
@@ -121,30 +122,11 @@ namespace Treeland {
 class Treeland;
 }
 
-struct Session : QObject {
-    Q_OBJECT
-public:
-    int id = 0;
-    uid_t uid = 0;
-    QString username = {};
-    WSocket *socket = nullptr;
-    WXWayland *xwayland = nullptr;
-    quint32 noTitlebarAtom = XCB_ATOM_NONE;
-    SettingManager *settingManager = nullptr;
-    QThread *settingManagerThread = nullptr;
-
-    ~Session();
-
-Q_SIGNALS:
-    void aboutToBeDestroyed();
-};
-
 class Helper : public WSeatEventFilter
 {
     friend class RootSurfaceContainer;
     friend class ShortcutRunner;
     Q_OBJECT
-    Q_PROPERTY(bool socketEnabled READ socketEnabled WRITE setSocketEnabled NOTIFY socketEnabledChanged FINAL)
     Q_PROPERTY(RootSurfaceContainer* rootSurfaceContainer READ rootSurfaceContainer CONSTANT FINAL)
     Q_PROPERTY(float animationSpeed READ animationSpeed WRITE setAnimationSpeed NOTIFY animationSpeedChanged FINAL)
     Q_PROPERTY(OutputMode outputMode READ outputMode WRITE setOutputMode NOTIFY outputModeChanged FINAL)
@@ -188,9 +170,6 @@ public:
 
     void init(Treeland::Treeland *treeland);
 
-    bool socketEnabled() const;
-    void setSocketEnabled(bool newSocketEnabled);
-
     RootSurfaceContainer *rootSurfaceContainer() const;
     Output *getOutput(WOutput *output) const;
 
@@ -202,19 +181,8 @@ public:
     Q_INVOKABLE void addOutput();
 
     void addSocket(WSocket *socket);
+    [[nodiscard]] WXWayland *createXWayland();
     void removeXWayland(WXWayland *xwayland);
-    void removeSession(std::shared_ptr<Session> session);
-    WXWayland *xwaylandForUid(uid_t uid) const;
-    WSocket *waylandSocketForUid(uid_t uid) const;
-    std::shared_ptr<Session> sessionForId(int id) const;
-    std::shared_ptr<Session> sessionForUid(uid_t uid) const;
-    std::shared_ptr<Session> sessionForUser(const QString &username) const;
-    std::shared_ptr<Session> sessionForXWayland(WXWayland *xwayland) const;
-    std::shared_ptr<Session> sessionForSocket(WSocket *socket) const;
-    std::weak_ptr<Session> activeSession() const;
-
-    WSocket *globalWaylandSocket() const;
-    WXWayland *globalXWayland() const;
 
     PersonalizationV1 *personalization() const;
 
@@ -267,12 +235,10 @@ public Q_SLOTS:
     bool surfaceBelongsToCurrentSession(SurfaceWrapper *wrapper);
 
 Q_SIGNALS:
-    void socketEnabledChanged();
     void primaryOutputChanged();
     void activatedSurfaceChanged();
 
     void animationSpeedChanged();
-    void socketFileChanged();
     void outputModeChanged();
 
     void currentModeChanged();
@@ -351,11 +317,6 @@ private:
     void restoreFromShowDesktop(SurfaceWrapper *activeSurface = nullptr);
     void setNoAnimation(bool noAnimation);
 
-    std::shared_ptr<Session> ensureSession(int id, QString username);
-    void updateActiveUserSession(const QString &username, int id);
-    bool isXWaylandClient(WClient *client);
-    void configureNumlock();
-
     static Helper *m_instance;
     TreelandUserConfig *m_config = nullptr;
     std::unique_ptr<TreelandConfig> m_globalConfig;
@@ -363,10 +324,6 @@ private:
     FpsDisplayManager *m_fpsManager = nullptr;
 
     CurrentMode m_currentMode{ CurrentMode::Normal };
-
-    // Sessions
-    std::weak_ptr<Session> m_activeSession;
-    QList<std::shared_ptr<Session>> m_sessions;
 
     // qtquick helper
     WOutputRenderWindow *m_renderWindow = nullptr;

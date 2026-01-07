@@ -3,7 +3,6 @@
 
 #include "helper.h"
 
-
 #ifdef EXT_SESSION_LOCK_V1
 #include "wsessionlock.h"
 #include "wsessionlockmanager.h"
@@ -39,6 +38,7 @@
 #include "output/outputconfigstate.h"
 #include "output/output.h"
 #include "output/outputlifecyclemanager.h"
+#include "session/session.h"
 #include "surface/surfacecontainer.h"
 #include "surface/surfacewrapper.h"
 #include "treelandconfig.hpp"
@@ -46,7 +46,6 @@
 #include "utils/cmdline.h"
 #include "utils/fpsdisplaymanager.h"
 #include "workspace/workspace.h"
-#include "xsettings/settingmanager.h"
 
 #include <xcb/xcb.h>
 #include <xcb/xproto.h>
@@ -127,26 +126,8 @@
 #include <utility>
 #include <wayland-util.h>
 
-#define _DEEPIN_NO_TITLEBAR "_DEEPIN_NO_TITLEBAR"
 #define EXT_DATA_CONTROL_MANAGER_V1_VERSION 1
 #define WLR_FRACTIONAL_SCALE_V1_VERSION 1
-
-static xcb_atom_t internAtom(xcb_connection_t *connection, const char *name, bool onlyIfExists)
-{
-    if (!name || *name == 0)
-        return XCB_NONE;
-
-    xcb_intern_atom_cookie_t cookie = xcb_intern_atom(connection, onlyIfExists, strlen(name), name);
-    xcb_intern_atom_reply_t *reply = xcb_intern_atom_reply(connection, cookie, 0);
-
-    if (!reply)
-        return XCB_NONE;
-
-    xcb_atom_t atom = reply->atom;
-    free(reply);
-
-    return atom;
-}
 
 static QByteArray readWindowProperty(xcb_connection_t *connection,
                                      xcb_window_t win,
@@ -178,26 +159,6 @@ static QByteArray readWindowProperty(xcb_connection_t *connection,
     } while (remaining > 0);
 
     return data;
-}
-
-Session::~Session()
-{
-    qCDebug(treelandCore) << "Deleting session for uid:" << uid << socket;
-    Q_EMIT aboutToBeDestroyed();
-
-    if (settingManagerThread) {
-        settingManagerThread->quit();
-        settingManagerThread->wait(QDeadlineTimer(25000));
-    }
-
-    if (settingManager) {
-        delete settingManager;
-        settingManager = nullptr;
-    }
-    if (xwayland)
-        Helper::instance()->shellHandler()->removeXWayland(xwayland);
-    if (socket)
-        delete socket;
 }
 
 Helper *Helper::m_instance = nullptr;
@@ -279,19 +240,6 @@ Helper::Helper(QObject *parent)
 
 Helper::~Helper()
 {
-    for (auto session : std::as_const(m_sessions)) {
-        Q_ASSERT(session);
-        if (session->xwayland) {
-            delete session->xwayland;
-            session->xwayland = nullptr;
-        }
-        if (session->socket) {
-            delete session->socket;
-            session->socket = nullptr;
-        }
-    }
-    m_sessions.clear();
-
     for (auto s : m_rootSurfaceContainer->surfaces()) {
         m_rootSurfaceContainer->destroyForSurface(s);
     }
@@ -1058,7 +1006,8 @@ void Helper::onSurfaceWrapperAdded(SurfaceWrapper *wrapper)
     bool isXwayland = wrapper->type() == SurfaceWrapper::Type::XWayland;
     bool isLayer = wrapper->type() == SurfaceWrapper::Type::Layer;
 
-    connect(m_activeSession.lock().get(), &Session::aboutToBeDestroyed, wrapper, &SurfaceWrapper::requestClose);
+    connect(SessionManager::instance()->activeSession().lock().get(), &Session::aboutToBeDestroyed,
+            wrapper, &SurfaceWrapper::requestClose);
 
     if (isXdgToplevel || isXdgPopup || isLayer) {
         auto *attached =
@@ -1118,7 +1067,7 @@ void Helper::onSurfaceWrapperAdded(SurfaceWrapper *wrapper)
             xcb_connection_t *connection = xwayland ? xwayland->xcbConnection() : nullptr;
             xcb_atom_t atom;
             if (xwayland) {
-                if (auto session = sessionForXWayland(xwayland))
+                if (auto session = SessionManager::instance()->sessionForXWayland(xwayland))
                     atom = session->noTitlebarAtom;
                 else
                     atom = XCB_ATOM_NONE;
@@ -1425,11 +1374,20 @@ void Helper::init(Treeland::Treeland *treeland)
     auto *xwaylandOutputManager =
         m_server->attach<WXdgOutputManager>(m_rootSurfaceContainer->outputLayout());
     xwaylandOutputManager->setScaleOverride(1.0);
-    xdgOutputManager->setFilter([this](WClient *client) { return !isXWaylandClient(client); });
-    xwaylandOutputManager->setFilter([this](WClient *client) { return isXWaylandClient(client); });
+
+    auto isXwaylandClient = [this](WClient *client) {
+        for (auto session : SessionManager::instance()->sessions()) {
+            if (session && session->xwayland && session->xwayland->waylandClient() == client) {
+                return true;
+            }
+        }
+        return false;
+    };
+    xdgOutputManager->setFilter([&isXwaylandClient](WClient *client) { return !isXwaylandClient(client); });
+    xwaylandOutputManager->setFilter([&isXwaylandClient](WClient *client) { return isXwaylandClient(client); });
     // User dde does not has a real Logind session, so just pass 0 as id
-    updateActiveUserSession(QStringLiteral("dde"), 0);
-    connect(m_userModel, &UserModel::userLoggedIn, this, &Helper::updateActiveUserSession);
+    SessionManager::instance()->updateActiveUserSession(QStringLiteral("dde"), 0);
+    connect(m_userModel, &UserModel::userLoggedIn, SessionManager::instance(), &SessionManager::updateActiveUserSession);
     m_xdgDecorationManager = m_server->attach<WXdgDecorationManager>();
     connect(m_xdgDecorationManager,
             &WXdgDecorationManager::surfaceModeChanged,
@@ -1530,23 +1488,6 @@ void Helper::init(Treeland::Treeland *treeland)
     }
 
     m_backend->handle()->start();
-}
-
-bool Helper::socketEnabled() const
-{
-    auto ptr = m_activeSession.lock();
-    if (ptr && ptr->socket)
-        return ptr->socket->isEnabled();
-    return false;
-}
-
-void Helper::setSocketEnabled(bool newEnabled)
-{
-    auto ptr = m_activeSession.lock();
-    if (ptr && ptr->socket)
-        ptr->socket->setEnabled(newEnabled);
-    else
-        qCWarning(treelandCore) << "Can't set enabled for empty socket!";
 }
 
 void Helper::activateSurface(SurfaceWrapper *wrapper, Qt::FocusReason reason)
@@ -2167,333 +2108,6 @@ void Helper::addSocket(WSocket *socket)
     m_server->addSocket(socket);
 }
 
-/**
- * Find the session for the given logind session id
- *
- * @param uid Session ID to find session for
- * @returns Session for the given id, or nullptr if not found
- */
-std::shared_ptr<Session> Helper::sessionForId(int id) const
-{
-    for (auto session : m_sessions) {
-        if (session && session->id == id)
-            return session;
-    }
-    return nullptr;
-}
-
-/**
- * Find the session for the given uid
- *
- * @param uid User ID to find session for
- * @returns Session for the given uid, or nullptr if not found
- */
-std::shared_ptr<Session> Helper::sessionForUid(uid_t uid) const
-{
-    for (auto session : m_sessions) {
-        if (session && session->uid == uid)
-            return session;
-    }
-    return nullptr;
-}
-
-/**
- * Find the session for the given username
- *
- * @param uid Username to find session for
- * @returns Session for the given username, or nullptr if not found
- */
-std::shared_ptr<Session> Helper::sessionForUser(const QString &username) const
-{
-    for (auto session : m_sessions) {
-        if (session && session->username == username)
-            return session;
-    }
-    return nullptr;
-}
-
-/**
- * Find the session for the given WXWayland
- *
- * @param xwayland WXWayland to find session for
- * @returns Session for the given xwayland, or nullptr if not found
- */
-std::shared_ptr<Session> Helper::sessionForXWayland(WXWayland *xwayland) const
-{
-    for (auto session : m_sessions) {
-        if (session && session->xwayland == xwayland)
-            return session;
-    }
-    return nullptr;
-}
-
-/**
- * Find the session for the given WSocket
- *
- * @param socket WSocket to find session for
- * @returns Session for the given socket, or nullptr if not found
- */
-std::shared_ptr<Session> Helper::sessionForSocket(WSocket *socket) const
-{
-    for (auto session : m_sessions) {
-        if (session && session->socket == socket)
-            return session;
-    }
-    return nullptr;
-}
-
-/**
- * Get the currently active session
- *
- * @returns weak_ptr to the active session
- */
-std::weak_ptr<Session> Helper::activeSession() const
-{
-    return m_activeSession;
-}
-
-/**
- * Remove a session from the session list
- *
- * @param session The session to remove
- */
-void Helper::removeSession(std::shared_ptr<Session> session)
-{
-    if (!session)
-        return;
-
-    if (m_activeSession.lock() == session) {
-        m_activeSession.reset();
-        m_activatedSurface = nullptr;
-        Q_EMIT activatedSurfaceChanged();
-    }
-
-    for (auto s : std::as_const(m_sessions)) {
-        if (s.get() == session.get()) {
-            m_sessions.removeOne(s);
-            break;
-        }
-    }
-
-    session.reset();
-}
-
-/**
- * Ensure a session exists for the given username, creating it if necessary
- *
- * @param id An existing logind session ID
- * @param uid Username to ensure session for
- * @returns Session for the given username, or nullptr on failure
- */
-std::shared_ptr<Session> Helper::ensureSession(int id, QString username)
-{
-    // Helper lambda to create WSocket and WXWayland
-    auto createWSocket = [this]() {
-        // Create WSocket
-        auto socket = new WSocket(true, this);
-        if (!socket->autoCreate()) {
-            qCCritical(treelandCore) << "Failed to create Wayland socket";
-            delete socket;
-            return static_cast<WSocket *>(nullptr);
-        }
-        // Connect signals
-        connect(socket, &WSocket::fullServerNameChanged, this, [this] {
-            if (m_activeSession.lock())
-                Q_EMIT socketFileChanged();
-        });
-        // Add socket to server
-        m_server->addSocket(socket);
-        return socket;
-    };
-    auto createXWayland = [this](WSocket *socket) {
-        // Create xwayland
-        auto *xwayland = m_shellHandler->createXWayland(m_server, m_seat, m_compositor, false);
-        if (!xwayland) {
-            qCCritical(treelandCore) << "Failed to create XWayland instance";
-            return static_cast<WXWayland *>(nullptr);
-        }
-        // Bind xwayland to socket
-        xwayland->setOwnsSocket(socket);
-        // Connect signals
-        connect(xwayland, &WXWayland::ready, this, [this, xwayland] {
-            if (auto session = sessionForXWayland(xwayland)) {
-                session->noTitlebarAtom =
-                    internAtom(session->xwayland->xcbConnection(), _DEEPIN_NO_TITLEBAR, false);
-                if (!session->noTitlebarAtom) {
-                    qCWarning(treelandInput) << "Failed to intern atom:" << _DEEPIN_NO_TITLEBAR;
-                }
-                session->settingManager = new SettingManager(session->xwayland->xcbConnection());
-                // TODO: proper destruction of QThread. relying on the QObject tree is crashy.
-                // We are moving session management out of Helper anyways, will fix later.
-                session->settingManagerThread = new QThread(session->xwayland);
-
-                session->settingManager->moveToThread(session->settingManagerThread);
-                connect(session->settingManagerThread, &QThread::started, this, [this, session]{
-                    const qreal scale = m_rootSurfaceContainer->window()->effectiveDevicePixelRatio();
-                    QMetaObject::invokeMethod(session->settingManager, [session, scale]() {
-                            session->settingManager->setGlobalScale(scale);
-                            session->settingManager->apply();
-                        }, Qt::QueuedConnection);
-
-                    QObject::connect(Helper::instance()->window(),
-                        &WOutputRenderWindow::effectiveDevicePixelRatioChanged,
-                        session->settingManager,
-                        [session](qreal dpr) {
-                            session->settingManager->setGlobalScale(dpr);
-                            session->settingManager->apply();
-                        }, Qt::QueuedConnection);
-                });
-
-                connect(session->settingManagerThread, &QThread::finished, session->settingManagerThread, &QThread::deleteLater);
-                session->settingManagerThread->start();
-            }
-        });
-        return xwayland;
-    };
-    // Check if session already exists for user
-    if (auto session = sessionForUser(username)) {
-        // Ensure it has a socket and xwayland
-        if (!session->socket) {
-            auto *socket = createWSocket();
-            if (!socket) {
-                m_sessions.removeOne(session);
-                return nullptr;
-            }
-            session->socket = socket;
-        }
-        if (!session->xwayland) {
-            auto *xwayland = createXWayland(session->socket);
-            if (!xwayland) {
-                delete session->socket;
-                m_sessions.removeOne(session);
-                return nullptr;
-            }
-
-            session->xwayland = xwayland;
-        }
-
-        return session;
-    }
-    // Session does not exist, create new session with deleter
-    auto session = std::make_shared<Session>();
-    session->id = id;
-    session->username = username;
-    session->uid = getpwnam(username.toLocal8Bit().data())->pw_uid;
-
-    session->socket = createWSocket();
-    if (!session->socket) {
-        session.reset();
-        return nullptr;
-    }
-
-    session->xwayland = createXWayland(session->socket);
-    if (!session->xwayland) {
-        session.reset();
-        return nullptr;
-    }
-
-    // Add session to list
-    m_sessions.append(session);
-    return session;
-}
-
-/**
- * Get the WXWayland for the given uid
- *
- * @param uid User ID to get WXWayland for
- * @returns WXWayland for the given uid, or nullptr if not found/created
- */
-WXWayland *Helper::xwaylandForUid(uid_t uid) const
-{
-    auto session = sessionForUid(uid);
-    return session ? session->xwayland : nullptr;
-}
-
-/**
- * Get the WSocket for the given uid
- *
- * @param uid User ID to get WSocket for
- * @returns WSocket for the given uid, or nullptr if not found/created
- */
-WSocket *Helper::waylandSocketForUid(uid_t uid) const
-{
-    auto session = sessionForUid(uid);
-    return session ? session->socket : nullptr;
-}
-
-/**
- * Get the global WSocket, which is not relative with any session and
- * always available.
- *
- * @returns The global WSocket, or nullptr if it's not created yet.
- */
-WSocket *Helper::globalWaylandSocket() const
-{
-    return waylandSocketForUid(getpwnam("dde")->pw_uid);
-}
-
-/**
- * Get the global WXWayland, which is not relative with any session and
- * always available.
- *
- * @returns The global WXWayland, or nullptr if none active
- */
-WXWayland *Helper::globalXWayland() const
-{
-    return xwaylandForUid(getpwnam("dde")->pw_uid);
-}
-
-/**
- * Update the active session to the given uid, creating it if necessary.
- * This will update XWayland visibility and emit socketFileChanged if the
- * active session changed.
- *
- * @param username Username to set as active session
- */
-void Helper::updateActiveUserSession(const QString &username, int id)
-{
-    // Get previous active session
-    auto previous = m_activeSession.lock();
-    // Get new session for uid, creating if necessary
-    auto session = ensureSession(id, username);
-    if (!session) {
-        qCWarning(treelandInput) << "Failed to ensure session for user" << username;
-        return;
-    }
-    if (previous != session) {
-        // Update active session
-        m_activeSession = session;
-        // Clear activated surface
-        setActivatedSurface(nullptr);
-        Q_EMIT activatedSurfaceChanged();
-        // Emit signal and update socket enabled state
-        if (previous && previous->socket)
-            previous->socket->setEnabled(false);
-        session->socket->setEnabled(true);
-        Q_EMIT socketFileChanged();
-        // Notify session changed through DBus, treeland-sd will listen it to update envs
-        Q_EMIT m_treeland->SessionChanged();
-    }
-    qCInfo(treelandCore) << "Listing on:" << session->socket->fullServerName();
-}
-
-/**
- * Check if the given WClient belongs to any XWayland session.
- * This is used in setFilter function for output managers.
- *
- * @param client WClient to check
- * @returns true if the client is an XWayland client, false otherwise
- */
-bool Helper::isXWaylandClient(WClient *client)
-{
-    for (auto session : m_sessions) {
-        if (session && session->xwayland && session->xwayland->waylandClient() == client) {
-            return true;
-        }
-    }
-    return false;
-}
-
 PersonalizationV1 *Helper::personalization() const
 {
     return m_personalization;
@@ -2963,4 +2577,9 @@ bool Helper::setXWindowPositionRelative(uint wid, WSurface *anchor, wl_fixed_t d
     rect.translate(wl_fixed_to_double(dx), wl_fixed_to_double(dy));
     target->setPosition(rect.topLeft());
     return true;
+}
+
+WXWayland *Helper::createXWayland()
+{
+    return shellHandler()->createXWayland(m_server, m_seat, m_compositor, false);
 }
