@@ -145,7 +145,7 @@ class Helper : public WSeatEventFilter
     friend class ShortcutRunner;
     Q_OBJECT
     Q_PROPERTY(bool socketEnabled READ socketEnabled WRITE setSocketEnabled NOTIFY socketEnabledChanged FINAL)
-    Q_PROPERTY(RootSurfaceContainer* rootContainer READ rootContainer CONSTANT FINAL)
+    Q_PROPERTY(RootSurfaceContainer* rootSurfaceContainer READ rootSurfaceContainer CONSTANT FINAL)
     Q_PROPERTY(float animationSpeed READ animationSpeed WRITE setAnimationSpeed NOTIFY animationSpeedChanged FINAL)
     Q_PROPERTY(OutputMode outputMode READ outputMode WRITE setOutputMode NOTIFY outputModeChanged FINAL)
     Q_PROPERTY(SurfaceWrapper* activatedSurface READ activatedSurface NOTIFY activatedSurfaceChanged FINAL)
@@ -191,7 +191,7 @@ public:
     bool socketEnabled() const;
     void setSocketEnabled(bool newSocketEnabled);
 
-    RootSurfaceContainer *rootContainer() const;
+    RootSurfaceContainer *rootSurfaceContainer() const;
     Output *getOutput(WOutput *output) const;
 
     float animationSpeed() const;
@@ -227,8 +227,6 @@ public:
     Q_INVOKABLE bool isLaunchpad(WLayerSurface *surface) const;
 
     void handleWindowPicker(WindowPickerInterface *picker);
-
-    RootSurfaceContainer *rootSurfaceContainer() const;
 
     void setMultitaskViewImpl(IMultitaskView *impl);
     void setLockScreenImpl(ILockScreen *impl);
