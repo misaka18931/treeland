@@ -24,7 +24,7 @@ public:
 
     void clear();
     bool dispatchKeyPress(QKeyCombination sequence, bool repeat);
-    bool dispatchKeyRelease(QKeyCombination sequence);
+    bool dispatchKeyRelease(QKeyCombination sequence, bool repeat);
 
 Q_SIGNALS:
     void actionTriggered(ShortcutAction action, const QString &name, bool isGesture, bool isRepeat = false);
@@ -35,7 +35,7 @@ private:
     static constexpr QKeyCombination normalizeKeyCombination(QKeyCombination combination);
 
     QMap<int, QMap<ShortcutAction, std::pair<QString, bool>>> m_keyPressMap;
-    QMap<int, QMap<ShortcutAction, QString>> m_keyReleaseMap;
+    QMap<int, QMap<ShortcutAction, std::pair<QString, bool>>> m_keyReleaseMap;
     QMap<std::pair<uint, SwipeGesture::Direction>, QMap<ShortcutAction, QString>> m_gesturemap;
     QMap<std::pair<uint, SwipeGesture::Direction>, QObject*> m_gestures;
     QMap<QString, std::function<void()>> m_deleters;

@@ -39,33 +39,32 @@ uint ShortcutController::registerKey(const QString &name, const QString& key, ui
     }
     int combined = keyComb.toCombined();
 
-    switch (mode) {
-    case KeybindMode::keybind_mode_key_press:
-    case KeybindMode::keybind_mode_key_press_repeat: {
+    bool bindRelease = (mode & KeybindMode::keybind_mode_release);
+    bool bindRepeat = (mode & KeybindMode::keybind_mode_repeat);
+    if (mode & ~(KeybindMode::keybind_mode_release | KeybindMode::keybind_mode_repeat)) {
+        return BindError::bind_error_invalid_argument;
+    }
+    if (bindRelease) {
         auto &entry = m_keyPressMap[combined];
         if (entry.contains(action)) {
             return BindError::bind_error_duplicate_binding;
         }
-        entry.insert(action, std::make_pair(name, mode == KeybindMode::keybind_mode_key_press_repeat));
+        entry.insert(action, std::make_pair(name, bindRepeat));
         m_deleters[name] = [this, combined, action]() {
             m_keyPressMap[combined].remove(action);
         };
         return 0;
-    }
-    case KeybindMode::keybind_mode_key_release: {
+    } else {
         auto &entry = m_keyReleaseMap[combined];
         if (entry.contains(action)) {
             return BindError::bind_error_duplicate_binding;
         }
-        entry.insert(action, name);
+        entry.insert(action, std::make_pair(name, bindRepeat));
         m_deleters[name] = [this, combined, action]() {
             m_keyReleaseMap[combined].remove(action);
         };
         return 0;
     }
-    default:
-        return BindError::bind_error_invalid_argument;
-    };
 
     Q_UNREACHABLE();
 }
@@ -198,12 +197,16 @@ bool ShortcutController::dispatchKeyPress(QKeyCombination combination, bool repe
     return false;
 }
 
-bool ShortcutController::dispatchKeyRelease(QKeyCombination combination)
+bool ShortcutController::dispatchKeyRelease(QKeyCombination combination, bool repeat)
 {
     auto combined = normalizeKeyCombination(combination).toCombined();
     if (m_keyReleaseMap.contains(combined)) {
-        for (const auto &[action, name] : std::as_const(m_keyReleaseMap[combined]).asKeyValueRange()) {
-            emit actionTriggered(action, name, false);
+        for (const auto &[action, keybind] : std::as_const(m_keyReleaseMap[combined]).asKeyValueRange()) {
+            const auto& [name, canRepeat] = keybind;
+            if (repeat && !canRepeat) {
+                continue;
+            }
+            emit actionTriggered(action, name, false, repeat);
         }
         return true;
     }

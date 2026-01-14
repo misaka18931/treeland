@@ -1728,7 +1728,7 @@ bool Helper::beforeDisposeEvent(WSeat *seat, QWindow *, QInputEvent *event)
                 return true;
             }
             if (event->type() == QEvent::KeyRelease
-                && m_shortcutManager->controller()->dispatchKeyRelease(combination)) {
+                && m_shortcutManager->controller()->dispatchKeyRelease(combination, kevent->isAutoRepeat())) {
                 return true;
             }
         } while (false);
