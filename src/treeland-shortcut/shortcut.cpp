@@ -47,10 +47,11 @@ static const QMap<QString, ShortcutV2::action> ActionMap = {
     {"TaskswitchSameAppPrev", ShortcutV2::action_taskswitch_sameapp_prev},
 };
 
-static const QMap<QString, ShortcutV2::keybind_mode> KeybindModeMap = {
-    {"KeyRelease", ShortcutV2::keybind_mode_key_release},
-    {"KeyPress", ShortcutV2::keybind_mode_key_press},
-    {"KeyPressRepeat", ShortcutV2::keybind_mode_key_press_repeat},
+static const QMap<QString, uint> KeybindModeMap = {
+    {"KeyRelease", ShortcutV2::keybind_mode_release},
+    {"KeyPress", 0},
+    {"KeyPressRepeat", ShortcutV2::keybind_mode_repeat},
+    {"KeyPeleaseRepeat", ShortcutV2::keybind_mode_repeat | ShortcutV2::keybind_mode_release},
 };
 
 static const QMap<QString, ShortcutV2::direction> GestureDirectionMap = {
@@ -288,7 +289,7 @@ void Shortcut::registerForManager(ShortcutV2 *manager)
     if (!shortcut.isEmpty()) {
         auto keybindName = QString("%1_key").arg(m_shortcutName);
 
-        ShortcutV2::keybind_mode mode = ShortcutV2::keybind_mode_key_press;
+        uint mode = 0;
         auto modeStr = m_settings.value("Shortcut/KeybindMode").toString();
         if (KeybindModeMap.contains(modeStr)) {
             mode = KeybindModeMap.value(modeStr);
