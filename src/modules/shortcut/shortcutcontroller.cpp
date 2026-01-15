@@ -8,7 +8,7 @@
 #include "qwayland-server-treeland-shortcut-manager-v2.h"
 
 using BindError = QtWaylandServer::treeland_shortcut_manager_v2::bind_error;
-using KeybindMode = QtWaylandServer::treeland_shortcut_manager_v2::keybind_mode;
+Q_DECLARE_FLAGS()
 
 ShortcutController::ShortcutController(QObject *parent)
     : QObject(parent)

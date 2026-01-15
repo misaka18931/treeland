@@ -17,7 +17,7 @@ public:
     explicit ShortcutController(QObject *parent = nullptr);
     ~ShortcutController() override;
 
-    uint registerKey(const QString &name, const QString& key, uint mode, ShortcutAction action);
+    uint registerKey(const QString &name, const QString& key, uint flags, ShortcutAction action);
     uint registerSwipeGesture(const QString &name, uint finger, SwipeGesture::Direction direction, ShortcutAction action);
     uint registerHoldGesture(const QString &name, uint finger, ShortcutAction action);
     void unregisterShortcut(const QString &name);
@@ -27,7 +27,7 @@ public:
     bool dispatchKeyRelease(QKeyCombination sequence, bool repeat);
 
 Q_SIGNALS:
-    void actionTriggered(ShortcutAction action, const QString &name, bool isGesture, bool isRepeat = false);
+    void actionTriggered(ShortcutAction action, const QString &name, bool isGesture, uint key_flags = 0u);
     void actionProgress(ShortcutAction action, qreal progress, const QString &name);
     void actionFinished(ShortcutAction action, const QString &name, bool isTriggered);
 
