@@ -48,10 +48,10 @@ static const QMap<QString, ShortcutV2::action> ActionMap = {
 };
 
 static const QMap<QString, uint> KeybindModeMap = {
-    {"KeyRelease", ShortcutV2::keybind_mode_release},
-    {"KeyPress", 0},
-    {"KeyPressRepeat", ShortcutV2::keybind_mode_repeat},
-    {"KeyPeleaseRepeat", ShortcutV2::keybind_mode_repeat | ShortcutV2::keybind_mode_release},
+    {"KeyPress", ShortcutV2::keybind_flag_key_press},
+    {"KeyRelease", ShortcutV2::keybind_flag_key_release},
+    {"KeyPressRepeat", ShortcutV2::keybind_flag_key_press | ShortcutV2::keybind_flag_repeat},
+    {"KeyReleaseRepeat", ShortcutV2::keybind_flag_key_release | ShortcutV2::keybind_flag_repeat},
 };
 
 static const QMap<QString, ShortcutV2::direction> GestureDirectionMap = {
@@ -289,12 +289,12 @@ void Shortcut::registerForManager(ShortcutV2 *manager)
     if (!shortcut.isEmpty()) {
         auto keybindName = QString("%1_key").arg(m_shortcutName);
 
-        uint mode = 0;
+        uint keybindFlags = ShortcutV2::keybind_flag_key_press;
         auto modeStr = m_settings.value("Shortcut/KeybindMode").toString();
         if (KeybindModeMap.contains(modeStr)) {
-            mode = KeybindModeMap.value(modeStr);
+            keybindFlags = KeybindModeMap.value(modeStr);
         }
-        manager->bind_key(keybindName, shortcut, mode, action);
+        manager->bind_key(keybindName, shortcut, keybindFlags, action);
         m_registeredBindings.append(keybindName);
     }
 
