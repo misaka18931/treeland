@@ -20,7 +20,7 @@ class Multitaskview : public QQuickItem
     QML_ELEMENT
     Q_PROPERTY(Status status READ status NOTIFY statusChanged FINAL)
     Q_PROPERTY(ActiveReason activeReason READ activeReason NOTIFY activeReasonChanged FINAL)
-    Q_PROPERTY(qreal partialFactor READ partialFactor NOTIFY partialFactorChanged FINAL)
+    Q_PROPERTY(qreal partialFactor READ partialFactor WRITE setPartialFactor NOTIFY partialFactorChanged FINAL)
 
 public:
     enum Status
@@ -70,6 +70,8 @@ private:
     Status m_status;
     ActiveReason m_activeReason;
     qreal m_partialFactor{ 0.0 };
+
+    void setPartialFactor(qreal partialFactor);
 };
 
 class MultitaskviewSurfaceModel : public QAbstractListModel

@@ -37,6 +37,14 @@ void Multitaskview::setStatus(Status status)
     Q_EMIT statusChanged();
 }
 
+void Multitaskview::setPartialFactor(qreal partialFactor)
+{
+    if (qFuzzyCompare(partialFactor, m_partialFactor))
+        return;
+    m_partialFactor = partialFactor;
+    Q_EMIT partialFactorChanged();
+}
+
 Multitaskview::ActiveReason Multitaskview::activeReason() const
 {
     return m_activeReason;
@@ -58,8 +66,10 @@ qreal Multitaskview::partialFactor() const
 void Multitaskview::updatePartialFactor(qreal delta)
 {
     qreal newPartialFactor = qBound(0.0, m_partialFactor + delta, 1.0);
+    qWarning() << "updatePartialFactor called:" << newPartialFactor << m_partialFactor;
     if (qFuzzyCompare(newPartialFactor, m_partialFactor))
         return;
+    qWarning() << "partialFactor updated:" << newPartialFactor << m_partialFactor;
     m_partialFactor = newPartialFactor;
     Q_EMIT partialFactorChanged();
 }
