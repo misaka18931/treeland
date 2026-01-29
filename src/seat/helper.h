@@ -261,6 +261,7 @@ private:
     void onSurfaceModeChanged(WSurface *surface, WXdgDecorationManager::DecorationMode mode);
     void setGamma(struct wlr_gamma_control_manager_v1_set_gamma_event *event);
     void onOutputTestOrApply(qw_output_configuration_v1 *config, bool onlyTest);
+    void onOutputCommitFinished(qw_output_configuration_v1 *config, bool success);
     void onSetOutputPowerMode(wlr_output_power_v1_set_mode_event *event);
     void onNewIdleInhibitor(wlr_idle_inhibitor_v1 *inhibitor);
     void onDockPreview(std::vector<SurfaceWrapper *> surfaces,
@@ -316,6 +317,7 @@ private:
     void setWorkspaceVisible(bool visible);
     void restoreFromShowDesktop(SurfaceWrapper *activeSurface = nullptr);
     void setNoAnimation(bool noAnimation);
+    void configureNumlock();
 
     static Helper *m_instance;
     TreelandUserConfig *m_config = nullptr;
@@ -401,6 +403,4 @@ private:
         bool allSuccess = true;
     };
     PendingOutputConfig m_pendingOutputConfig;
-
-    void onOutputCommitFinished(qw_output_configuration_v1 *config, bool success);
 };

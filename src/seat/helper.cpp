@@ -95,6 +95,7 @@
 #include <qwgammacontorlv1.h>
 #include <qwidleinhibitv1.h>
 #include <qwidlenotifyv1.h>
+#include <qwinputdevice.h>
 #include <qwlayershellv1.h>
 #include <qwlogging.h>
 #include <qwoutput.h>
