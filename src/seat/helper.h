@@ -404,3 +404,4 @@ private:
     };
     PendingOutputConfig m_pendingOutputConfig;
 };
+

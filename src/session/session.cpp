@@ -425,3 +425,4 @@ void SessionManager::updateActiveUserSession(const QString &username, int id)
     }
     qCInfo(treelandCore) << "Listing on:" << session->socket->fullServerName();
 }
+

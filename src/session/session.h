@@ -75,3 +75,4 @@ private:
     std::weak_ptr<Session> m_activeSession;
     QList<std::shared_ptr<Session>> m_sessions;
 };
+

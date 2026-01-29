@@ -2584,3 +2584,4 @@ WXWayland *Helper::createXWayland()
 {
     return shellHandler()->createXWayland(m_server, m_seat, m_compositor, false);
 }
+
