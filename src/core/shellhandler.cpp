@@ -267,9 +267,6 @@ WXWayland *ShellHandler::createXWayland(WServer *server,
 void ShellHandler::removeXWayland(WXWayland *xwayland)
 {
     m_xwaylands.removeOne(xwayland);
-    // Ensure xwayland is removed from interfaceList
-    if (auto server = WServer::from(xwayland))
-        server->detach(xwayland);
     delete xwayland;
 }
 

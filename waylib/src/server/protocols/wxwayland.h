@@ -42,6 +42,7 @@ public:
     Q_ENUM(XcbAtom)
 
     WXWayland(QW_NAMESPACE::qw_compositor *compositor, bool lazy = true);
+    ~WXWayland() override;
 
     inline QW_NAMESPACE::qw_xwayland *handle() const {
         return nativeInterface<QW_NAMESPACE::qw_xwayland>();

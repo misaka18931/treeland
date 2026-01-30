@@ -49,10 +49,17 @@ Session::~Session()
         delete m_settingManager;
         m_settingManager = nullptr;
     }
-    if (m_xwayland)
-        Helper::instance()->shellHandler()->removeXWayland(m_xwayland);
-    if (m_socket)
+    if (m_xwayland) {
+        if (auto *helper = Helper::instance())
+            helper->shellHandler()->removeXWayland(m_xwayland);
+        else
+            delete m_xwayland;
+        m_xwayland = nullptr;
+    }
+    if (m_socket) {
         delete m_socket;
+        m_socket = nullptr;
+    }
 }
 
 int Session::id() const
