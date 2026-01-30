@@ -129,6 +129,13 @@ WXWayland::WXWayland(qw_compositor *compositor, bool lazy)
     d->socket = new WSocket(false, this);
 }
 
+WXWayland::~WXWayland()
+{
+    // Ensure xwayland is removed from interfaceList
+    if (auto server = WServer::from(this))
+        server->detach(this);
+}
+
 QByteArray WXWayland::displayName() const
 {
     return isValid() ? QByteArray(std::as_const(handle()->handle()->display_name)) : QByteArray();
