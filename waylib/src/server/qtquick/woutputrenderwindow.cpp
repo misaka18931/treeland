@@ -21,6 +21,7 @@
 #include "platformplugin/qwlrootswindow.h"
 #include "platformplugin/types.h"
 
+#include <qlogging.h>
 #include <qwoutput.h>
 #include <qwrenderer.h>
 #include <qwbackend.h>

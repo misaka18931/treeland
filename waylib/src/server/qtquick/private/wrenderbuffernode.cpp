@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0 OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include <QDebug>
+#include <qlogging.h>
+#include <qnamespace.h>
 #include <qquickwindow.h>
 #define protected public
 #define private public
@@ -452,9 +454,9 @@ private:
         renderer = context->createRenderer(QSGRendererInterface::RenderMode2DNoDepthBuffer);
         isBatchRenderer = dynamic_cast<QSGBatchRenderer::Renderer*>(renderer);
 
-        connect(owner, &QQuickWindow::sceneGraphAboutToStop, this, [this]() {
+        connect(owner, &QQuickWindow::sceneGraphInvalidated, this, [this]() {
             delete this;
-        });
+        }, Qt::SingleShotConnection);
     }
 
     ~RhiManager() {

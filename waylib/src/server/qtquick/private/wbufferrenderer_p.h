@@ -106,7 +106,7 @@ protected:
 
 private:
     inline WOutputRenderWindow *renderWindow() const {
-        return qobject_cast<WOutputRenderWindow*>(parent());
+        return qobject_cast<WOutputRenderWindow*>(window());
     }
 
     inline bool shouldCacheBuffer() const {

@@ -50,10 +50,9 @@ Session::~Session()
         m_settingManager = nullptr;
     }
     if (m_xwayland) {
+        // if shellHandler is already destructed, wait for WServer to clean up the interface.
         if (auto *helper = Helper::instance())
             helper->shellHandler()->removeXWayland(m_xwayland);
-        else
-            delete m_xwayland;
         m_xwayland = nullptr;
     }
     if (m_socket) {
