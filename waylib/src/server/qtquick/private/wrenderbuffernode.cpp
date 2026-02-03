@@ -450,6 +450,10 @@ private:
         // For an example: RhiNode to render its content nodes on an exists renderTarget.
         renderer = context->createRenderer(QSGRendererInterface::RenderMode2DNoDepthBuffer);
         isBatchRenderer = dynamic_cast<QSGBatchRenderer::Renderer*>(renderer);
+
+        connect(owner, &QQuickWindow::sceneGraphInvalidated, this, [this]() {
+            delete this;
+        }, Qt::SingleShotConnection);
     }
 
     ~RhiManager() {

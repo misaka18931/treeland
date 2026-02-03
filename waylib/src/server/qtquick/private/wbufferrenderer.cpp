@@ -85,7 +85,11 @@ WBufferRenderer::WBufferRenderer(QQuickItem *parent)
     , m_cacheBuffer(true)
     , m_hideSource(false)
 {
-
+    // ensure graphical resources are deleted when scene graph is invalidated
+    // TODO: WBufferRenderer created through WOutputViewport has window() == nullptr?
+    connect(window(), &QQuickWindow::sceneGraphInvalidated,
+            this, &WBufferRenderer::invalidateSceneGraph,
+            Qt::DirectConnection);
 }
 
 WBufferRenderer::~WBufferRenderer()
@@ -687,11 +691,19 @@ void WBufferRenderer::invalidateSceneGraph()
 {
     if (m_textureProvider)
         m_textureProvider.reset();
+
+    for (auto &s : m_sourceList) {
+        if (s.renderer) {
+            delete s.renderer;
+            s.renderer = nullptr;
+        }
+    }
 }
 
 void WBufferRenderer::releaseResources()
 {
     cleanTextureProvider();
+    resetSources();
 }
 
 void WBufferRenderer::cleanTextureProvider()
