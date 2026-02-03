@@ -492,6 +492,7 @@ void Treeland::quit()
     // make sure all deleted before app exit
     d_ptr.reset();
     qApp->quit();
+    std::terminate();
 }
 
 } // namespace Treeland

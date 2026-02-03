@@ -1596,6 +1596,10 @@ bool Helper::beforeDisposeEvent(WSeat *seat, QWindow *, QInputEvent *event)
     if (event->type() == QEvent::KeyPress) {
         auto kevent = static_cast<QKeyEvent *>(event);
 
+        if (QKeySequence(kevent->keyCombination()) ==
+            QKeySequence(Qt::MetaModifier | Qt::Key_F12)) {
+            Q_EMIT requestQuit();
+        }
         // The debug view shortcut should always handled first
         if (QKeySequence(kevent->keyCombination())
             == QKeySequence(Qt::ControlModifier | Qt::ShiftModifier | Qt::MetaModifier | Qt::Key_F11)) {
