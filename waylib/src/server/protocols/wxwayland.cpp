@@ -341,6 +341,7 @@ void WXWayland::create(WServer *server)
 void WXWayland::destroy([[maybe_unused]] WServer *server)
 {
     W_D(WXWayland);
+    handle()->destroy();
 
     auto list = d->surfaceList;
     d->surfaceList.clear();
