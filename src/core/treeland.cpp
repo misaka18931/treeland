@@ -103,6 +103,8 @@ public:
             it->second->deleteLater();
             pluginTs.erase(it++);
         }
+        delete qmlEngine->singletonInstance<UserModel *>("Treeland", "UserModel");
+        qmlEngine->clearSingletons();
     }
 
 #ifndef DISABLE_DDM
