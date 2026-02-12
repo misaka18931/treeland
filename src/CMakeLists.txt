@@ -20,6 +20,7 @@ find_package(Qt6 COMPONENTS Quick QuickControls2 REQUIRED)
 if(Qt6_VERSION VERSION_GREATER_EQUAL 6.10)
     find_package(Qt6 REQUIRED COMPONENTS QuickPrivate)
 endif()
+find_package(cpptrace REQUIRED)
 pkg_search_module(PIXMAN REQUIRED IMPORTED_TARGET pixman-1)
 pkg_search_module(WAYLAND REQUIRED IMPORTED_TARGET wayland-server)
 pkg_search_module(LIBINPUT REQUIRED IMPORTED_TARGET libinput)
@@ -333,6 +334,7 @@ target_link_libraries(libtreeland
         PkgConfig::XCB
         $<$<NOT:$<BOOL:${DISABLE_DDM}>>:DDM::Common>
         $<$<NOT:$<BOOL:${DISABLE_DDM}>>:PkgConfig::PAM>
+        cpptrace::cpptrace
 )
 
 add_subdirectory(plugins)

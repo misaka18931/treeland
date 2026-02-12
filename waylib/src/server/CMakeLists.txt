@@ -31,6 +31,7 @@ pkg_search_module(PIXMAN REQUIRED IMPORTED_TARGET pixman-1)
 pkg_search_module(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
 pkg_search_module(XCB REQUIRED IMPORTED_TARGET xcb)
 pkg_search_module(EGL REQUIRED IMPORTED_TARGET egl)
+find_package(cpptrace REQUIRED)
 
 add_compile_definitions(WLR_PRIVATE=)
 
@@ -382,6 +383,7 @@ target_link_libraries(${TARGET}
 target_link_libraries(${TARGET}
     PUBLIC
         QWlroots::QWlroots
+        cpptrace::cpptrace
 )
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
