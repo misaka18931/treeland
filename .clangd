@@ -1,0 +1,10 @@
+CompileFlags:
+  # 1. Continue forcing clang++ to handle the ARM NEON intrinsics correctly
+  Compiler: clang++
+
+  # 2. Manually add the C++ standard library paths that clang++ is missing
+  # (These paths are taken from your original log)
+  Add:
+    - "-isystem/usr/include/c++/12"
+    - "-isystem/usr/include/x86_64-linux-gnu/c++/12"
+    - "-isystem/usr/include/c++/12/backward"
