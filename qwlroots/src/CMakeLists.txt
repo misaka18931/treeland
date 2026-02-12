@@ -12,6 +12,8 @@ find_package(Qt${QT_VERSION_MAJOR}
 
 find_package(PkgConfig REQUIRED)
 
+find_package(cpptrace REQUIRED)
+
 if (USE_WLROOTS_19)
     set(wlr wlroots-0.19)
     set(WLROOTS_MINIMUM_REQUIRED 0.19.0)
@@ -247,6 +249,7 @@ target_link_libraries(${TARGET}
     PkgConfig::WAYLAND_SERVER
     PkgConfig::PIXMAN
     PkgConfig::XKBCOMMON
+    cpptrace::cpptrace
 )
 
 if (QWLROOTS_USE_PERCOMPILE_HEADERS)
