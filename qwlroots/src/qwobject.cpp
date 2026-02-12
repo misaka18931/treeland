@@ -6,5 +6,6 @@
 QW_BEGIN_NAMESPACE
 
 QHash<void*, QObject*> qw_object_basic::map;
+QHash<void*, cpptrace::stacktrace> qw_object_basic::traces;
 
 QW_END_NAMESPACE
