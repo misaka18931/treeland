@@ -6,9 +6,10 @@
 #include <qwglobal.h>
 #include <qwinterface.h>
 #include <qwsignalconnector.h>
-
 #include <QHash>
 #include <QMetaMethod>
+
+#include "cpptrace/basic.hpp"
 
 QW_BEGIN_NAMESPACE
 
@@ -34,7 +35,10 @@ Q_SIGNALS:
     void before_destroy();
 
 protected:
-    static QHash<void*, QObject*> map;
+    static QHash<void *, QObject *> map;
+
+public:
+    static QHash<void *, cpptrace::stacktrace> traces;
 };
 
 template<typename Handle, typename Derive>
@@ -53,7 +57,8 @@ public:
                       "Please add Q_OBJECT macro to the derive class.");
 
         Q_ASSERT(!map.contains(h));
-        map.insert((void*)(h), this);
+        map.insert((void *)(h), this);
+        traces.insert(static_cast<void*>(h), cpptrace::stacktrace::current());
 
         constexpr bool has_destroy_signal = requires(const Handle& h) {
             h.events.destroy;
@@ -64,7 +69,8 @@ public:
         }
     }
 
-    ~qw_object() {
+    ~qw_object()
+    {
         if (!m_handle)
             return;
         do_destroy();
