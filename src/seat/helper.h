@@ -82,7 +82,7 @@ QW_USE_NAMESPACE
 
 class CaptureSourceSelector;
 class DDEShellManagerInterfaceV1;
-class DDMInterfaceV1;
+class DDMInterfaceV2;
 class ForeignToplevelV1;
 class FpsDisplayManager;
 class GreeterProxy;
@@ -214,7 +214,7 @@ public:
 
     inline UserModel *userModel() const { return m_userModel; };
     inline SessionModel *sessionModel() const { return m_sessionModel; };
-    DDMInterfaceV1 *ddmInterfaceV1() const;
+    DDMInterfaceV2 *ddmInterfaceV2() const;
 
     void activateSession();
     void deactivateSession();
@@ -366,7 +366,7 @@ private:
     PrelaunchSplash *m_prelaunchSplash = nullptr; // treeland prelaunch splash protocol
     VirtualOutputV1 *m_virtualOutput = nullptr;
     OutputManagerV1 *m_outputManagerV1 = nullptr;
-    DDMInterfaceV1 *m_ddmInterfaceV1 = nullptr;
+    DDMInterfaceV2 *m_ddmInterfaceV2 = nullptr;
     ScreensaverInterfaceV1 *m_screensaverInterfaceV1 = nullptr;
 #ifdef EXT_SESSION_LOCK_V1
     WSessionLockManager *m_sessionLockManager = nullptr;
