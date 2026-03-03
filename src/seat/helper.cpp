@@ -2305,7 +2305,8 @@ void Helper::showLockScreen(bool switchToGreeter)
     setWorkspaceVisible(false);
 
     setCurrentMode(CurrentMode::LockScreen);
-    m_lockScreen->lock();
+    if (!m_greeterProxy->isLocked())
+        m_lockScreen->lock();
 
     // send DDM switch to greeter mode
     if (switchToGreeter) {
